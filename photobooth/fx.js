@@ -261,24 +261,128 @@ export function bgCanvas(id) {
 
 let seg = null, face = null, loading = null, lastTs = 0, snap3d = null, snap3dTried = false;
 const temp = document.createElement("canvas"); temp.width = W; temp.height = H;
-const maskCv = document.createElement("canvas");
+
+/* ---------- Segmentasi orang: masukan kecil, pemulusan waktu, tepi lembut ---------- */
+const SEG_LONG = 256, MASK_MS = 50, LUMA_MS = 400, LIFT_TARGET = .4, LIFT_MAX = 3, ERR_LIMIT = 12;
+const segIn = document.createElement("canvas");
+const lumaProbe = document.createElement("canvas"); lumaProbe.width = 16; lumaProbe.height = 12;
+const segMaskCv = document.createElement("canvas");
+let soft = null, blurTmp = null, segImg = null, segAt = 0, segErrors = 0, segLift = -1, lumaAt = -1e9, segDead = false;
+
+async function buildSeg(fs) {
+  for (const delegate of ["GPU", "CPU"]) {          // sebagian GPU ponsel menolak grafnya; CPU lebih lambat tapi universal
+    let sg = null;
+    try {
+      sg = await ImageSegmenter.createFromOptions(fs, {
+        baseOptions: { modelAssetPath: "vendor/models/selfie_segmenter.tflite", delegate },
+        runningMode: "VIDEO", outputConfidenceMasks: true, outputCategoryMask: false,
+      });
+      const c = document.createElement("canvas"); c.width = c.height = 64;
+      const g = c.getContext("2d"); g.fillStyle = "#888"; g.fillRect(0, 0, 64, 64);
+      const r = sg.segmentForVideo(c, tsNext());     // inferensi percobaan: gagal di sini = pindah ke CPU
+      const ok = !!(r && r.confidenceMasks && r.confidenceMasks[0]);
+      r && r.close && r.close();
+      if (!ok) throw new Error("no mask");
+      return sg;
+    } catch (e) {
+      try { sg && sg.close(); } catch (_) {}
+      if (delegate === "CPU") throw e;
+    }
+  }
+}
+const buildFace = async (fs) => {
+  for (const delegate of ["GPU", "CPU"]) {
+    try {
+      return await FaceLandmarker.createFromOptions(fs, {
+        baseOptions: { modelAssetPath: "vendor/models/face_landmarker.task", delegate },
+        runningMode: "VIDEO", numFaces: 2, outputFacialTransformationMatrixes: true,
+      });
+    } catch (e) { if (delegate === "CPU") throw e; }
+  }
+};
+
+// Rata-rata kecerahan salinan kecil; adegan gelap diangkat (screen blend) supaya orang tidak terbaca sebagai latar.
+function liftShadows(g, now) {
+  if (now - lumaAt >= LUMA_MS) {
+    lumaAt = now;
+    try {
+      const pg = lumaProbe.getContext("2d", { willReadFrequently: true });
+      pg.drawImage(segIn, 0, 0, 16, 12);
+      const d = pg.getImageData(0, 0, 16, 12).data;
+      let sum = 0; for (let i = 0; i < d.length; i += 4) sum += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
+      const m = sum / (d.length / 4) / 255;
+      const want = m >= LIFT_TARGET ? 0 : m <= .005 ? LIFT_MAX : Math.min(LIFT_MAX, Math.max(0, Math.log2(Math.log(1 - LIFT_TARGET) / Math.log(1 - m))));
+      segLift = segLift < 0 ? want : segLift + (want - segLift) * .5;
+    } catch (_) {}
+  }
+  if (!(segLift > .05)) return;
+  g.globalCompositeOperation = "screen";
+  for (let left = segLift; left > .01; left -= 1) { g.globalAlpha = Math.min(1, left); g.drawImage(segIn, 0, 0); }
+  g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+}
+
+// Segmentasi ulang paling sering tiap MASK_MS. Mengembalikan true bila ada topeng siap pakai.
+function refreshSeg(video, vw, vh, now) {
+  if (segDead || !seg) return false;
+  if (segMaskCv.width && now - segAt < MASK_MS) return true;
+  const ar = W / H;                                  // bagian video yang memang tampil (cover ke W×H)
+  let sw = vw, sh = vh;
+  if (vw / vh > ar) sw = vh * ar; else sh = vw / ar;
+  const sx = (vw - sw) / 2, sy = (vh - sh) / 2;
+  const iw = SEG_LONG, ih = Math.round(SEG_LONG / ar);
+  if (segIn.width !== iw || segIn.height !== ih) { segIn.width = iw; segIn.height = ih; }
+  const g = segIn.getContext("2d");
+  g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high";   // area-average = peredam noise
+  let res = null;
+  try {
+    g.drawImage(video, sx, sy, sw, sh, 0, 0, iw, ih);
+    liftShadows(g, now);
+    res = seg.segmentForVideo(segIn, tsNext());
+    const m = res && res.confidenceMasks && res.confidenceMasks[0];
+    if (!m) throw new Error("no mask");
+    const conf = m.getAsFloat32Array(), mw = m.width, mh = m.height, n = mw * mh;
+    const fresh = !soft || soft.length !== n;
+    if (fresh) {
+      soft = new Float32Array(n); blurTmp = new Float32Array(n);
+      segMaskCv.width = mw; segMaskCv.height = mh;
+      segImg = segMaskCv.getContext("2d").createImageData(mw, mh);
+    }
+    for (let i = 0; i < n; i++) {                    // pemulusan waktu: adaptif terhadap gerak
+      if (fresh) { soft[i] = conf[i]; continue; }
+      const d = conf[i] - soft[i];
+      soft[i] += d * Math.min(1, .3 + Math.abs(d) * 1.4);
+    }
+    for (let y = 0; y < mh; y++) {                   // blur [1,2,1] horizontal
+      const r0 = y * mw;
+      for (let xx = 0; xx < mw; xx++) {
+        blurTmp[r0 + xx] = (soft[r0 + (xx > 0 ? xx - 1 : xx)] + 2 * soft[r0 + xx] + soft[r0 + (xx < mw - 1 ? xx + 1 : xx)]) * .25;
+      }
+    }
+    const px = segImg.data, lo = .3, ramp = .42;
+    for (let y = 0; y < mh; y++) {                   // blur vertikal + smoothstep → tepi rambut/bahu lembut
+      const up = (y > 0 ? y - 1 : y) * mw, dn = (y < mh - 1 ? y + 1 : y) * mw, r0 = y * mw;
+      for (let xx = 0; xx < mw; xx++) {
+        const c = (blurTmp[up + xx] + 2 * blurTmp[r0 + xx] + blurTmp[dn + xx]) * .25;
+        const a = Math.min(1, Math.max(0, (c - lo) / ramp));
+        px[(r0 + xx) * 4 + 3] = a * a * (3 - 2 * a) * 255;
+      }
+    }
+    segMaskCv.getContext("2d").putImageData(segImg, 0, 0);
+    segAt = now; segErrors = 0;
+  } catch (e) {
+    if (++segErrors >= ERR_LIMIT) { segDead = true; console.warn("Latar virtual dimatikan di perangkat ini:", e && e.message || e); }
+    return !!segMaskCv.width && !segDead;            // gagal sesekali: pakai topeng sebelumnya
+  } finally { try { res && res.close && res.close(); } catch (_) {} }
+  return true;
+}
 
 export function ensure(onState) {
   if (loading) return loading;
   loading = (async () => {
     onState && onState("loading");
     const fs = await FilesetResolver.forVisionTasks("vendor/wasm");
-    const mk = async (delegate) => Promise.all([
-      ImageSegmenter.createFromOptions(fs, {
-        baseOptions: { modelAssetPath: "vendor/models/selfie_segmenter.tflite", delegate },
-        runningMode: "VIDEO", outputConfidenceMasks: true, outputCategoryMask: false,
-      }),
-      FaceLandmarker.createFromOptions(fs, {
-        baseOptions: { modelAssetPath: "vendor/models/face_landmarker.task", delegate },
-        runningMode: "VIDEO", numFaces: 2, outputFacialTransformationMatrixes: true,
-      }),
-    ]);
-    try { [seg, face] = await mk("GPU"); } catch (e) { [seg, face] = await mk("CPU"); }
+    seg = await buildSeg(fs);
+    face = await buildFace(fs);
     onState && onState("ready");
   })().catch((e) => { loading = null; onState && onState("error", e); throw e; });
   return loading;
@@ -295,26 +399,17 @@ export function render(video, canvas, bgId, filterId) {
   x.save();
   x.setTransform(-1, 0, 0, 1, W, 0);
   let drawn = false;
-  if (bgId !== "none" && seg) {
-    const ts = tsNext();
-    const res = seg.segmentForVideo(video, ts);
-    const m = res.confidenceMasks && res.confidenceMasks[0];
-    if (m) {
-      const data = m.getAsFloat32Array();
-      if (maskCv.width !== m.width || maskCv.height !== m.height) { maskCv.width = m.width; maskCv.height = m.height; }
-      const mc = maskCv.getContext("2d"), img = mc.createImageData(m.width, m.height);
-      for (let i = 0; i < data.length; i++) { img.data[i * 4 + 3] = Math.min(255, Math.max(0, (data[i] - .25) * 1.8 * 255)); }
-      mc.putImageData(img, 0, 0);
-      const t = temp.getContext("2d");
-      t.globalCompositeOperation = "source-over"; t.clearRect(0, 0, W, H);
-      t.drawImage(video, ox, oy, vw * s, vh * s);
-      t.globalCompositeOperation = "destination-in";
-      t.drawImage(maskCv, ox, oy, vw * s, vh * s);
-      x.drawImage(bgCanvas(bgId), 0, 0);
-      x.drawImage(temp, 0, 0);
-      drawn = true;
-    }
-    res.close();
+  if (bgId !== "none" && refreshSeg(video, vw, vh, performance.now())) {
+    const t = temp.getContext("2d");
+    t.globalCompositeOperation = "source-over"; t.clearRect(0, 0, W, H);
+    t.drawImage(video, ox, oy, vw * s, vh * s);      // gambar video tiap frame (gerak tetap halus)
+    t.globalCompositeOperation = "destination-in";
+    t.imageSmoothingEnabled = true; t.imageSmoothingQuality = "high";
+    t.drawImage(segMaskCv, 0, 0, W, H);              // topeng diperbarui tiap MASK_MS
+    t.globalCompositeOperation = "source-over";
+    x.drawImage(bgCanvas(bgId), 0, 0);
+    x.drawImage(temp, 0, 0);
+    drawn = true;
   }
   if (!drawn) x.drawImage(video, ox, oy, vw * s, vh * s);
   if (filterId !== "none" && face) {
