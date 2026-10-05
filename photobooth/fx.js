@@ -75,11 +75,11 @@ function crownHeart(i, now) {
   const th = Math.PI * (.05 + .9 * ((i + .5) / CROWN_SLOTS) + (R() - .5) * .025);
   return {
     i, forehead, th,
-    size: forehead ? .07 + R() * .03 : k < .2 ? .12 + R() * .04 : k < .8 ? .2 + R() * .06 : .27 + R() * .03,
+    size: forehead ? .06 + R() * .03 : k < .2 ? .1 + R() * .03 : k < .8 ? .16 + R() * .05 : .22 + R() * .03,
     u: (R() - .5) * .3, v: -.12 + R() * .1,
     rad: (R() - .5) * .04, color: CROWN_COLORS[(R() * CROWN_COLORS.length) | 0],
     alpha: R() < .25 ? .6 : .92, rot: (R() - .5) * 1.1, ph: R() * 6,
-    birth: now + R() * 300, life: (forehead ? 1.2 : 1.7) + R() * 1.0,
+    birth: now + R() * 1100, life: (forehead ? 1.2 : 1.7) + R() * 1.0,
   };
 }
 function loveParticles(x, idx, top, at, a, fw, t) {
@@ -87,13 +87,13 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   const dt = st.last ? Math.min(.1, (t - st.last) / 1000) : 0;
   st.last = t;
   const R = Math.random;
-  if (!st.crown) st.crown = Array.from({ length: CROWN_SLOTS + 1 }, (_, i) => { const h = crownHeart(i, t); h.birth = t + R() * 900; return h; });
+  if (!st.crown) st.crown = Array.from({ length: CROWN_SLOTS + 1 }, (_, i) => { const h = crownHeart(i, t); h.birth = t + R() * 1100; return h; });
   st.af += dt * .55;
   while (st.af >= 1) {                                   // hati lepas di samping atas kepala
     st.af -= 1;
     const side = R() < .5 ? -1 : 1;
     st.float.push({
-      u: side * (.7 + R() * .25), v: .0 + R() * .4, size: .2 + R() * .1,
+      u: side * (.64 + R() * .14), v: .1 + R() * .3, size: .18 + R() * .08,
       vx: side * .02, vy: .03 + R() * .04, rot: (R() - .5) * .6, age: 0, life: 2.6 + R() * 1.2,
     });
   }
@@ -110,8 +110,10 @@ function loveParticles(x, idx, top, at, a, fw, t) {
     let c;
     if (h.forehead) c = at(top, h.u, h.v);
     else {
-      const dx = Math.cos(h.th), dy = Math.sin(h.th);
-      c = at(top, dx * (rx + h.rad), -.04 + dy * (ry + h.rad * 1.2) + .05 * age);
+      // kurva hasil ukur video referensi: puncak ~.35 di tengah, ~.21 di u=.3, ~.15 di sisi (u=.5..6)
+      const u0 = Math.cos(h.th) * (.6 + h.rad);
+      const v0 = .07 + .3 * Math.pow(Math.max(0, 1 - Math.abs(u0) / .66), 2.4) + h.rad * 1.2 + .05 * age;
+      c = at(top, u0, v0);
     }
     heart(x, c.x, c.y, h.size * fw * sc, a + h.rot * .6, h.alpha * (1 - out * .5), h.color, 0);
   }
