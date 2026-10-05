@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LDR Photobooth</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>LDR Photobooth 📸</h1>
+    <p class="sub">Foto berdua walau beda kota. Satu orang buat room, satunya join pakai kode.</p>
+
+    <section id="setup" class="panel">
+      <button id="btnStart" class="btn">Aktifkan Kamera</button>
+      <div id="connect" hidden>
+        <div class="row">
+          <button id="btnCreate" class="btn">Buat Room</button>
+          <span class="or">atau</span>
+          <input id="joinCode" placeholder="Kode room" maxlength="6" autocapitalize="characters">
+          <button id="btnJoin" class="btn ghost">Join</button>
+        </div>
+        <p id="status" class="status"></p>
+      </div>
+    </section>
+
+    <section id="stage" class="panel" hidden>
+      <div class="videos">
+        <div class="vbox"><video id="local" autoplay playsinline muted></video><span>Kamu</span></div>
+        <div class="vbox" id="remoteBox" hidden><video id="remote" autoplay playsinline></video><span>Pasangan</span></div>
+        <div id="count" class="count" hidden></div>
+      </div>
+      <div class="row">
+        <label>Warna frame <input type="color" id="frameColor" value="#ffd1dc"></label>
+        <input id="caption" placeholder="Teks bawah (opsional)" maxlength="30">
+      </div>
+      <button id="btnSnap" class="btn big">Mulai Foto (3x)</button>
+    </section>
+
+    <section id="result" class="panel" hidden>
+      <canvas id="strip"></canvas>
+      <div class="row">
+        <a id="btnDownload" class="btn" download="ldr-photobooth.png">Unduh</a>
+        <button id="btnAgain" class="btn ghost">Foto Lagi</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
