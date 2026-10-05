@@ -16,6 +16,7 @@
 
   <main>
     <!-- HOME -->
+    <video id="camSrc" autoplay playsinline muted></video>
     <section data-screen="home">
       <span class="pill">for two</span>
       <h1>Photobooth</h1>
@@ -62,9 +63,17 @@
       <h2 id="shootTitle">Get ready</h2>
       <p class="sub" id="shootSub">Pastikan wajah kelihatan, lalu mulai.</p>
       <div class="cam">
-        <video id="local" autoplay playsinline muted></video>
+        <canvas id="local" width="640" height="480"></canvas>
         <video id="remote" autoplay playsinline hidden></video>
         <div id="count" class="count" hidden></div>
+      </div>
+      <div id="fx">
+        <div class="chips">
+          <button class="chip sel" data-fx="bg">Background</button>
+          <button class="chip" data-fx="filter">Face filter</button>
+        </div>
+        <div id="fxOpts" class="fxopts"></div>
+        <p id="fxStatus" class="status"></p>
       </div>
       <p class="try" id="tryText"></p>
       <div id="thumbs" class="thumbs"></div>
@@ -101,7 +110,8 @@
     </section>
   </main>
 
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="vendor/peerjs.min.js"></script>
   <script src="script.js"></script>
+  <script type="module" src="fx.js"></script>
 </body>
 </html>

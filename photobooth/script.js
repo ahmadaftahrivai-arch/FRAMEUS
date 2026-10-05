@@ -82,7 +82,7 @@ const PROMPTS = [
 /* ---------- State ---------- */
 const S = {
   stream: null, remoteStream: null, peer: null, conn: null, isHost: false,
-  layout: "4cut", frame: "blush", cat: "Simple",
+  layout: "4cut", frame: "blush", cat: "Simple", bg: "none", filter: "none", fxTab: "bg", raw: null,
   shots: [], picked: [], busy: false, screen: "home",
 };
 const hasRemote = () => !!S.remoteStream;
@@ -119,18 +119,34 @@ $("btnBack").onclick = () => {
 async function ensureCam() {
   if (S.stream) return true;
   try {
-    S.stream = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 720 }, audio: false });
-    return true;
+    S.raw = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 720 }, audio: false });
   } catch (e) {
     alert("Kamera tidak bisa diakses. Izinkan akses kamera dan buka lewat HTTPS atau localhost.");
     return false;
   }
+  const src = $("camSrc");
+  src.srcObject = S.raw;
+  await src.play().catch(() => {});
+  // Kamera diproses ke canvas (mirror + background + filter); canvas inilah yang dikirim ke pasangan.
+  S.stream = $("local").captureStream(30);
+  const tick = () => { drawFrame(); requestAnimationFrame(tick); };
+  tick();
+  return true;
+}
+function drawFrame() {
+  const v = $("camSrc"), cv = $("local");
+  try {
+    if (window.FX) return FX.render(v, cv, S.bg, S.filter);
+  } catch (e) { console.warn(e); }
+  if (!v.videoWidth) return;
+  const x = cv.getContext("2d");
+  x.save(); x.setTransform(-1, 0, 0, 1, cv.width, 0); cover(x, v, 0, 0, cv.width, cv.height, false); x.restore();
 }
 function attachVideos() {
-  $("local").srcObject = S.stream;
   const r = $("remote");
   r.hidden = !hasRemote();
   if (hasRemote()) r.srcObject = S.remoteStream;
+  renderFx();
 }
 const newCode = () => {
   const c = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -275,7 +291,7 @@ function render(canvas, { frame, shots, scale = 1, caption = "", date = false })
 
 /* ---------- Pemotretan ---------- */
 function cover(x, v, dx, dy, dw, dh, mirror) {
-  const vw = v.videoWidth || dw, vh = v.videoHeight || dh;
+  const vw = v.videoWidth || v.width || dw, vh = v.videoHeight || v.height || dh;
   const s = Math.max(dw / vw, dh / vh);
   x.save();
   x.beginPath(); x.rect(dx, dy, dw, dh); x.clip();
@@ -287,10 +303,10 @@ function grab() {
   const c = document.createElement("canvas");
   c.width = CW; c.height = CH;
   const x = c.getContext("2d");
-  if (!hasRemote()) { cover(x, $("local"), 0, 0, CW, CH, true); return c; }
+  if (!hasRemote()) { cover(x, $("local"), 0, 0, CW, CH, false); return c; }
   const half = CW / 2;
   // kiri = host, kanan = tamu (sama di kedua sisi)
-  cover(x, $("local"), S.isHost ? 0 : half, 0, half, CH, true);
+  cover(x, $("local"), S.isHost ? 0 : half, 0, half, CH, false);
   cover(x, $("remote"), S.isHost ? half : 0, 0, half, CH, false);
   return c;
 }
@@ -314,6 +330,7 @@ async function runShoot() {
   S.busy = true;
   S.shots = [];
   $("btnShoot").hidden = true;
+  $("fx").hidden = true;
   const total = need() + EXTRA_SHOTS;
   const prompts = [...PROMPTS].sort(() => Math.random() - .5);
   attachVideos();
@@ -329,12 +346,58 @@ async function runShoot() {
   }
   S.busy = false;
   $("btnShoot").hidden = false;
+  $("fx").hidden = false;
   $("shootTitle").textContent = "Get ready";
   $("shootSub").textContent = "Pastikan wajah kelihatan, lalu mulai.";
   $("tryText").textContent = "";
   startPick();
 }
 $("btnShoot").onclick = () => { send({ t: "shoot" }); runShoot(); };
+
+/* ---------- Background & face filter ---------- */
+document.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { S.fxTab = b.dataset.fx; renderFx(); }));
+function fxButton(label, sel, onclick) {
+  const b = document.createElement("button");
+  b.className = "fxo" + (sel ? " sel" : "");
+  if (label instanceof Node) b.append(label); else b.textContent = label;
+  b.onclick = onclick;
+  return b;
+}
+function renderFx() {
+  document.querySelectorAll("[data-fx]").forEach((b) => {
+    b.classList.toggle("sel", b.dataset.fx === S.fxTab);
+    const on = b.dataset.fx === "bg" ? S.bg !== "none" : S.filter !== "none";
+    b.textContent = (b.dataset.fx === "bg" ? "Background" : "Face filter") + (on ? " •" : "");
+  });
+  const box = $("fxOpts");
+  box.innerHTML = "";
+  if (!window.FX) { $("fxStatus").textContent = "Efek belum termuat (fx.js)."; return; }
+  const key = S.fxTab === "bg" ? "bg" : "filter";
+  box.append(fxButton("✕", S[key] === "none", () => { S[key] = "none"; renderFx(); }));
+  if (key === "bg") {
+    FX.BGS.forEach((b) => {
+      const cv = document.createElement("canvas"); cv.width = 104; cv.height = 104;
+      cv.getContext("2d").drawImage(FX.bgCanvas(b.id), 80, 0, 480, 480, 0, 0, 104, 104);
+      const btn = fxButton(cv, S.bg === b.id, () => pickFx("bg", b.id));
+      btn.title = b.name;
+      box.append(btn);
+    });
+  } else {
+    FX.FILTERS.forEach((f) => box.append(fxButton(f.icon, S.filter === f.id, () => pickFx("filter", f.id))));
+  }
+}
+async function pickFx(key, id) {
+  S[key] = id; renderFx();
+  const st = $("fxStatus");
+  try {
+    await FX.ensure((s) => { if (s === "loading") st.textContent = "Memuat efek… (pertama kali agak lama)"; });
+    st.textContent = "";
+  } catch (e) {
+    S[key] = "none"; renderFx();
+    st.textContent = "Efek gagal dimuat: " + (e && e.message || e);
+  }
+}
+window.addEventListener("fx-ready", renderFx);
 
 /* ---------- Pilih foto ---------- */
 function startPick() {

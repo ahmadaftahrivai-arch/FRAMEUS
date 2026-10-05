@@ -39,8 +39,12 @@ input[type=text],input:not([type]){padding:.65rem .8rem;border:1px solid var(--l
 .frames .card{width:150px;padding:.5rem .4rem}
 .frames canvas{height:200px;width:100%;max-width:100%;object-fit:contain;display:block;margin:0 auto}
 .cam{position:relative;display:flex;max-width:520px;margin:0 auto;aspect-ratio:4/3;background:#222;border-radius:14px;overflow:hidden}
-.cam video{flex:1;min-width:0;width:100%;height:100%;object-fit:cover}
-#local{transform:scaleX(-1)}
+.cam video,.cam canvas{flex:1;min-width:0;width:100%;height:100%;object-fit:cover}
+#camSrc{position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none}
+.fxopts{display:flex;gap:.5rem;overflow-x:auto;justify-content:center;flex-wrap:wrap;padding:.2rem 0}
+.fxo{width:52px;height:52px;border-radius:50%;border:3px solid transparent;background:#fff;box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;font-size:1.5rem;line-height:1;overflow:hidden}
+.fxo canvas{width:100%;height:100%;display:block}
+.fxo.sel{border-color:var(--pink)}
 .count{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:8rem;font-weight:800;color:#fff;text-shadow:0 2px 14px #000a}
 .try{color:var(--mute);margin:.8rem 0;min-height:1.5em}
 .thumbs{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap}
