@@ -66,45 +66,59 @@ function heart(x, cx, cy, w, rot, alpha, color, blur) {
   x.restore();
 }
 const loveState = [];
+const CROWN_SLOTS = 12, CROWN_COLORS = ["#ff47a6", "#f23c9a", "#ff4fae", "#e8369a"];
+const backOut = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;      // membesar sedikit melewati ukuran akhir
+function crownHeart(i, now) {
+  const R = Math.random;
+  const forehead = i >= CROWN_SLOTS;                       // 2 hati kecil di tengah dahi
+  const k = R();
+  const th = Math.PI * (.05 + .9 * ((i + .5) / CROWN_SLOTS) + (R() - .5) * .05);
+  return {
+    i, forehead, th,
+    size: forehead ? .07 + R() * .04 : k < .25 ? .1 + R() * .05 : k < .75 ? .18 + R() * .07 : .26 + R() * .07,
+    u: (R() - .5) * .3, v: -.12 + R() * .1,
+    rad: (R() - .5) * .06, color: CROWN_COLORS[(R() * CROWN_COLORS.length) | 0],
+    alpha: R() < .25 ? .6 : .92, rot: (R() - .5) * 1.1, ph: R() * 6,
+    birth: now + R() * 300, life: (forehead ? 1.2 : 1.7) + R() * 1.0,
+  };
+}
 function loveParticles(x, idx, top, at, a, fw, t) {
-  const st = loveState[idx] || (loveState[idx] = { cloud: [], hair: [], last: 0, ac: 0, ah: 0 });
+  const st = loveState[idx] || (loveState[idx] = { crown: null, float: [], last: 0, af: 0 });
   const dt = st.last ? Math.min(.1, (t - st.last) / 1000) : 0;
   st.last = t;
-  st.ac += dt * 9; st.ah += dt * 5.5;
   const R = Math.random;
-  while (st.ac >= 1) {                                   // awan hati besar & pucat
-    st.ac -= 1;
-    const ang = R() * Math.PI * 2, rr = Math.sqrt(R());
-    st.cloud.push({
-      u: Math.cos(ang) * rr * 1.0, v: .3 + Math.sin(ang) * rr * .42,
-      size: .22 + R() * .2, peak: .35 + R() * .35,
-      rot: (R() - .5) * .7, spin: (R() - .5) * .6,
-      vx: (R() - .5) * .2, vy: .1 + R() * .15, ph: R() * 6, age: 0, life: .9 + R() * .8,
+  if (!st.crown) st.crown = Array.from({ length: CROWN_SLOTS + 2 }, (_, i) => { const h = crownHeart(i, t); h.birth = t + R() * 900; return h; });
+  st.af += dt * .7;
+  while (st.af >= 1) {                                   // hati lepas di samping atas kepala
+    st.af -= 1;
+    const side = R() < .5 ? -1 : 1;
+    st.float.push({
+      u: side * (.8 + R() * .35), v: .1 + R() * .5, size: .22 + R() * .12,
+      vx: side * .03, vy: .06 + R() * .06, rot: (R() - .5) * .6, age: 0, life: 2.6 + R() * 1.2,
     });
   }
-  while (st.ah >= 1) {                                   // hati kecil pekat di garis rambut
-    st.ah -= 1;
-    const th = Math.PI * (.12 + .76 * R());
-    st.hair.push({
-      u: Math.cos(th) * .5, v: -.36 + Math.sin(th) * .58 + (R() - .5) * .08,
-      size: .07 + R() * .08, rot: (R() - .5) * .9, spin: (R() - .5) * .5,
-      vx: Math.cos(th) * (.25 + R() * .25), vy: .15 + R() * .3, age: 0, life: .5 + R() * .6,
-    });
+  st.float = st.float.filter((p) => (p.age += dt) < p.life);
+  // mahkota di garis rambut
+  const rx = .56, ry = .62;
+  for (let n = 0; n < st.crown.length; n++) {
+    let h = st.crown[n];
+    let age = (t - h.birth) / 1000;
+    if (age > h.life) { h = st.crown[n] = crownHeart(h.i, t); age = (t - h.birth) / 1000; }
+    if (age < 0) continue;
+    const pop = Math.min(1, age / .45), out = Math.max(0, (age - (h.life - .35)) / .35);
+    const sc = backOut(pop) * (1 - out) * (1 + .05 * Math.sin(t / 160 + h.ph));
+    let c;
+    if (h.forehead) c = at(top, h.u, h.v);
+    else {
+      const dx = Math.cos(h.th), dy = Math.sin(h.th);
+      c = at(top, dx * (rx + h.rad), -.36 + dy * (ry + h.rad));
+    }
+    heart(x, c.x, c.y, h.size * fw * sc, a + h.rot * .6, h.alpha * (1 - out * .5), h.color, 0);
   }
-  st.cloud = st.cloud.filter((p) => (p.age += dt) < p.life);
-  st.hair = st.hair.filter((p) => (p.age += dt) < p.life);
-  for (const p of st.cloud) {
-    const u = p.age / p.life, env = Math.sin(Math.PI * u) ** .8;
-    const c = at(top, p.u + p.vx * p.age + Math.sin(t / 900 + p.ph) * .015, p.v + p.vy * p.age);
-    const w = p.size * fw * (1 + .08 * Math.sin(t / 110 + p.ph));
-    heart(x, c.x, c.y, w, a + p.rot + p.spin * p.age, p.peak * env, "#ff4d80", w * .1);
-  }
-  for (const p of st.hair) {
-    const u = p.age / p.life, pop = Math.min(1, u / .2);
-    const scale = .3 + .7 * (1 - (1 - pop) ** 3);
-    const alpha = (u < .55 ? 1 : 1 - (u - .55) / .45) * .95;
+  for (const p of st.float) {
+    const u = p.age / p.life, env = Math.min(1, u / .15) * (u > .6 ? 1 - (u - .6) / .4 : 1);
     const c = at(top, p.u + p.vx * p.age, p.v + p.vy * p.age);
-    heart(x, c.x, c.y, p.size * fw * scale, a + p.rot + p.spin * p.age, alpha, "#f0306e", 0);
+    heart(x, c.x, c.y, p.size * fw * (.6 + .4 * Math.min(1, u / .15)), a + p.rot, .85 * env, "#ff6bb3", 0);
   }
 }
 
