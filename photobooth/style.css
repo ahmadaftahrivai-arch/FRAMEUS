@@ -13,6 +13,8 @@
   --red-d: #a92519;
   --pink: #ff9db4;
   --sun: #f6c64a;
+  --me: #ff6f91;
+  --peer: #4a90e2;
   --ok: #2f8f5b;
   --r: 16px;
   --shadow: 4px 4px 0 var(--ink);
@@ -233,3 +235,17 @@ main { max-width: 640px; margin: 0 auto; padding: 24px 18px 40px; }
 }
 @media (max-width: 420px) { .frames { gap: 10px; } .fcard canvas { height: 128px; } .stepper .step-label { display: none; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* ---------- pilihan bersama: warna per orang ---------- */
+.opt[data-pick~="me"], .fcard[data-pick~="me"] { outline: 3px solid var(--me); outline-offset: 2px; }
+.opt[data-pick~="peer"], .fcard[data-pick~="peer"] { outline: 3px solid var(--peer); outline-offset: 2px; }
+.opt[data-pick~="me"][data-pick~="peer"], .fcard[data-pick~="me"][data-pick~="peer"] { outline: 3px solid var(--me); outline-offset: 2px; box-shadow: 0 0 0 7px var(--peer); }
+.who-row { position: absolute; left: 6px; top: 6px; display: flex; gap: 4px; }
+.who { padding: 1px 8px; border: 2px solid var(--ink); border-radius: 999px; color: #fff; font-size: .68rem; font-weight: 800; line-height: 1.5; }
+.who.me { background: var(--me); }
+.who.peer { background: var(--peer); }
+.tab .tab-count { margin-left: 6px; font-size: .72rem; opacity: .6; font-weight: 800; }
+.tab[data-pick~="me"]::after, .tab[data-pick~="peer"]::after { content: ""; display: inline-block; width: 9px; height: 9px; margin-left: 7px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--me); }
+.tab[data-pick~="peer"]:not([data-pick~="me"])::after { background: var(--peer); }
+.tab[data-pick~="me"][data-pick~="peer"]::after { background: linear-gradient(90deg, var(--me) 50%, var(--peer) 50%); }
+.pick-note { min-height: 1.4em; margin: 14px 0 0; font-size: .9rem; font-weight: 600; color: var(--red-d); }

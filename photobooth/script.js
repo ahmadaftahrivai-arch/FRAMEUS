@@ -83,6 +83,7 @@ const S = {
   stream: null, remoteStream: null, peer: null, conn: null, isHost: false,
   layout: "4cut", frame: "blush", cat: "Polos", code: "", bg: "none", filter: "none", fxTab: "bg", raw: null,
   shots: [], picked: [], busy: false, screen: "home",
+  touched: { layout: false, frame: false }, peerPick: { layout: null, frame: null },
 };
 const hasRemote = () => !!S.remoteStream;
 const need = () => LAYOUTS[S.layout].n;
@@ -178,19 +179,36 @@ function setupConn(c) {
   c.on("open", () => {
     setPresence("ok", "Pasangan sudah terhubung");
     $("homeStatus").textContent = "Tersambung!";
+    setColors();
     if (!S.isHost && S.screen === "home") go("layout");
-    if (S.isHost) send({ t: "cfg", layout: S.layout, frame: S.frame });
+    sendPick();
+    send({ t: "cat", cat: S.cat });
   });
   c.on("data", onMsg);
   c.on("close", () => { S.remoteStream = null; setPresence("off", "Pasangan terputus"); if (S.screen === "shoot") attachVideos(); else updateBadge(); });
 }
 function onMsg(m) {
-  if (m.t === "cfg") { S.layout = m.layout; S.frame = m.frame; refreshSel(); }
-  if (m.t === "next" && S.screen === "layout") go("frame");
-  if (m.t === "next" && S.screen === "frame") go("shoot");
+  if (m.t === "pick") { S.peerPick = { layout: m.layout, frame: m.frame }; refreshSel(); }
+  if (m.t === "cat") { S.cat = m.cat; if (S.screen === "frame") renderFrames(); }
+  if (m.t === "next") {
+    // Yang menekan Lanjut yang menentukan. Kalau kalian menekan bersamaan, pilihan host yang dipakai.
+    if (m.step === "layout") {
+      if (S.screen === "layout") { S.layout = m.layout; go("frame"); }
+      else if (S.screen === "frame" && !S.isHost && m.host) { S.layout = m.layout; renderFrames(); }
+    }
+    if (m.step === "frame") {
+      if (S.screen === "frame") { S.layout = m.layout; S.frame = m.frame; go("shoot"); }
+      else if (S.screen === "shoot" && !S.isHost && m.host && !S.busy) { S.layout = m.layout; S.frame = m.frame; }
+    }
+  }
   if (m.t === "shoot") { go("shoot"); runShoot(); }
 }
-const pushCfg = () => send({ t: "cfg", layout: S.layout, frame: S.frame });
+const sendPick = () => send({ t: "pick", layout: S.touched.layout ? S.layout : null, frame: S.touched.frame ? S.frame : null });
+function setColors() {            // host = pink, tamu = biru; "me" selalu warnamu sendiri
+  const root = document.documentElement.style;
+  root.setProperty("--me", S.isHost ? "#ff6f91" : "#4a90e2");
+  root.setProperty("--peer", S.isHost ? "#4a90e2" : "#ff6f91");
+}
 const peerError = (e) => ({
   "peer-unavailable": "Kode room tidak ditemukan. Cek lagi kodenya.",
   "network": "Tidak bisa tersambung ke server. Cek koneksi internetmu.",
@@ -250,7 +268,7 @@ $("joinForm").addEventListener("submit", async (e) => {
     call.on("stream", onRemote);
   });
 });
-$("btnSolo").onclick = async () => { if (await ensureCam()) go("layout"); };
+$("btnSolo").onclick = async () => { if (await ensureCam()) { S.isHost = true; setColors(); go("layout"); } };
 
 /* ---------- Pilih layout & frame ---------- */
 function layoutIcon(L) {
@@ -268,21 +286,24 @@ function renderLayouts() {
   for (const [id, L] of Object.entries(LAYOUTS)) {
     const b = document.createElement("button");
     b.type = "button"; b.className = "opt"; b.dataset.id = id;
-    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", id === S.layout);
+    b.setAttribute("role", "radio");
     b.append(layoutIcon(L));
-    b.insertAdjacentHTML("beforeend", `<b>${L.name}</b><small>${L.desc}</small><span class="check" aria-hidden="true">✓</span>`);
-    b.onclick = () => { S.layout = id; pushCfg(); refreshSel(); };
+    b.insertAdjacentHTML("beforeend", `<b>${L.name}</b><small>${L.desc}</small><span class="who-row"></span><span class="check" aria-hidden="true">✓</span>`);
+    b.onclick = () => { S.layout = id; S.touched.layout = true; sendPick(); refreshSel(); };
     box.append(b);
   }
+  refreshSel();
 }
 function renderFrames() {
   const cats = $("cats");
   cats.innerHTML = "";
   CATS.forEach((c) => {
     const b = document.createElement("button");
-    b.type = "button"; b.className = "tab" + (c === S.cat ? " sel" : ""); b.textContent = c;
+    b.type = "button"; b.className = "tab" + (c === S.cat ? " sel" : ""); b.dataset.cat = c;
+    const n = FRAMES.filter((f) => f.cat === c).length;
+    b.innerHTML = `${c}<span class="tab-count">${n}</span>`;
     b.setAttribute("role", "tab"); b.setAttribute("aria-selected", c === S.cat);
-    b.onclick = () => { S.cat = c; renderFrames(); };
+    b.onclick = () => { S.cat = c; send({ t: "cat", cat: c }); renderFrames(); };
     cats.append(b);
   });
   const box = $("frames");
@@ -290,22 +311,39 @@ function renderFrames() {
   FRAMES.filter((f) => f.cat === S.cat).forEach((f) => {
     const b = document.createElement("button");
     b.type = "button"; b.className = "fcard"; b.dataset.id = f.id;
-    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", f.id === S.frame);
+    b.setAttribute("role", "radio");
     const cv = document.createElement("canvas");
     render(cv, { frame: f, shots: null, scale: 0.5 });
     b.append(cv);
-    b.insertAdjacentHTML("beforeend", `<b>${f.name}</b><span class="check" aria-hidden="true">✓</span>`);
-    b.onclick = () => { S.frame = f.id; pushCfg(); refreshSel(); };
+    b.insertAdjacentHTML("beforeend", `<b>${f.name}</b><span class="who-row"></span><span class="check" aria-hidden="true">✓</span>`);
+    b.onclick = () => { S.frame = f.id; S.touched.frame = true; sendPick(); refreshSel(); };
     box.append(b);
   });
+  refreshSel();
+}
+// Tandai siapa memilih apa: cincin warnamu, cincin warna pasangan, dan keduanya jika sama.
+function mark(node, isMe, isPeer) {
+  const tok = [isMe && "me", isPeer && "peer"].filter(Boolean).join(" ");
+  if (tok) node.dataset.pick = tok; else delete node.dataset.pick;
+  node.setAttribute("aria-checked", isMe);
+  const row = node.querySelector(".who-row");
+  if (row) row.innerHTML = (isMe ? '<span class="who me">Kamu</span>' : "") + (isPeer ? '<span class="who peer">Dia</span>' : "");
 }
 function refreshSel() {
-  document.querySelectorAll("#layouts .opt").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === S.layout));
-  document.querySelectorAll("#frames .fcard").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === S.frame));
-  if (S.screen === "frame") renderFrames();
+  const pl = S.peerPick.layout, pf = S.peerPick.frame;
+  document.querySelectorAll("#layouts .opt").forEach((b) => mark(b, b.dataset.id === S.layout, b.dataset.id === pl));
+  document.querySelectorAll("#frames .fcard").forEach((b) => mark(b, b.dataset.id === S.frame, b.dataset.id === pf));
+  document.querySelectorAll("#cats .tab").forEach((b) => {
+    const ids = FRAMES.filter((f) => f.cat === b.dataset.cat).map((f) => f.id);
+    const tok = [ids.includes(S.frame) && "me", pf && ids.includes(pf) && "peer"].filter(Boolean).join(" ");
+    if (tok) b.dataset.pick = tok; else delete b.dataset.pick;
+  });
+  const diff = (a, b) => a && b && a !== b;
+  $("layoutNote").textContent = diff(S.layout, pl) ? "Pilihan kalian beda. Siapa yang menekan Lanjut, dia yang menentukan." : "";
+  $("frameNote").textContent = diff(S.frame, pf) ? "Pilihan kalian beda. Siapa yang menekan Lanjut, dia yang menentukan." : "";
 }
-$("btnLayoutNext").onclick = () => { send({ t: "next" }); go("frame"); };
-$("btnFrameNext").onclick = () => { send({ t: "next" }); go("shoot"); };
+$("btnLayoutNext").onclick = () => { send({ t: "next", step: "layout", layout: S.layout, host: S.isHost }); go("frame"); };
+$("btnFrameNext").onclick = () => { send({ t: "next", step: "frame", layout: S.layout, frame: S.frame, host: S.isHost }); go("shoot"); };
 
 /* ---------- Render photo strip ---------- */
 function render(canvas, { frame, shots, scale = 1, caption = "", date = false }) {
