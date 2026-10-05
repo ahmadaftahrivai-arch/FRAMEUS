@@ -99,7 +99,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   }
   st.float = st.float.filter((p) => (p.age += dt) < p.life).slice(-1);
   // mahkota di garis rambut
-  const rx = .56, ry = .42;
+  const rx = .58, ry = .42;
   for (let n = 0; n < st.crown.length; n++) {
     let h = st.crown[n];
     let age = (t - h.birth) / 1000;
@@ -111,7 +111,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
     if (h.forehead) c = at(top, h.u, h.v);
     else {
       const dx = Math.cos(h.th), dy = Math.sin(h.th);
-      c = at(top, dx * (rx + h.rad), -.16 + dy * (ry + h.rad * 1.2));
+      c = at(top, dx * (rx + h.rad), -.04 + dy * (ry + h.rad * 1.2) + .05 * age);
     }
     heart(x, c.x, c.y, h.size * fw * sc, a + h.rot * .6, h.alpha * (1 - out * .5), h.color, 0);
   }
