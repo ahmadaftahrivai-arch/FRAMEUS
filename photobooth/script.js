@@ -104,6 +104,7 @@ const BACK_TO = { booth: "home", room: "booth", layout: () => (S.peer ? "room" :
 
 function go(name) {
   S.screen = name;
+  refreshSkin();
   document.querySelectorAll("[data-screen]").forEach((sec) => (sec.hidden = sec.dataset.screen !== name));
   const cur = STEP_OF[name];
   const idx = ["frame", "shoot", "pick", "style", "done"].indexOf(cur);
@@ -242,12 +243,15 @@ function openRoom(attempt = 0) {
   S.peer.on("call", (call) => { call.answer(S.stream); call.on("stream", onRemote); });
   S.peer.on("connection", setupConn);
 }
-document.body.dataset.booth = "classic";
+// Skin booth hanya dipakai mulai layar room; beranda & pilih booth selalu terang (klasik).
+const skinFor = (screen) => (screen === "home" || screen === "booth" ? "classic" : S.booth);
+const refreshSkin = () => { document.body.dataset.booth = skinFor(S.screen); };
+refreshSkin();
 function applyBooth(id, fromPeer) {
   const B = BOOTHS[id]; if (!B) return;
   S.booth = id; S.cat = B.cat;
   if (!S.touched.frame || !fromPeer) { S.frame = B.frame; }
-  document.body.dataset.booth = id;
+  refreshSkin();
   if (!fromPeer) send({ t: "booth", booth: id });
 }
 function renderBooths() {
