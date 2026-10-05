@@ -51,33 +51,51 @@ const emoji = (x, ch, cx, cy, size, rot = 0) => {
   x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(ch, 0, 0); x.restore();
 };
 
-// Hati pipih ala efek "love" di Mac: gradasi pink, berdenyut, mengorbit di sekitar kepala.
-function heart(x, cx, cy, size, rot, alpha) {
-  x.save(); x.translate(cx, cy); x.rotate(rot); x.scale(size, size); x.globalAlpha = alpha;
-  x.beginPath(); x.moveTo(0, .42);
-  x.bezierCurveTo(-1.05, -.15, -.55, -.95, 0, -.4);
-  x.bezierCurveTo(.55, -.95, 1.05, -.15, 0, .42);
-  const g = x.createLinearGradient(-.6, -.8, .6, .6);
-  g.addColorStop(0, "#ff7eb6"); g.addColorStop(1, "#ff3d8b");
+// Efek "love" ala Mac: hati pink gemuk muncul (pop) di garis kepala, melayang pelan ke luar-atas, lalu memudar.
+const HEART_COLORS = [["#f2509f", "#dc2f86"], ["#ef4aa4", "#d92e8c"], ["#f45ba6", "#e0388f"], ["#e8409a", "#d02a82"]];
+function heart(x, cx, cy, w, rot, alpha, ci) {
+  const [c1, c2] = HEART_COLORS[ci % HEART_COLORS.length];
+  x.save(); x.translate(cx, cy); x.rotate(rot); x.scale(w / 1.8, w / 1.8); x.globalAlpha = alpha;
+  x.beginPath(); x.moveTo(0, .55);
+  x.bezierCurveTo(-.2, .38, -.92, .08, -.9, -.3);
+  x.bezierCurveTo(-.88, -.78, -.26, -.86, 0, -.4);
+  x.bezierCurveTo(.26, -.86, .88, -.78, .9, -.3);
+  x.bezierCurveTo(.92, .08, .2, .38, 0, .55);
+  const g = x.createLinearGradient(-.7, -.8, .6, .6);
+  g.addColorStop(0, c1); g.addColorStop(1, c2);
   x.fillStyle = g; x.fill();
-  x.globalAlpha = alpha * .55; x.fillStyle = "#fff";
-  x.beginPath(); x.ellipse(-.38, -.32, .16, .09, -.6, 0, 7); x.fill();
   x.restore();
 }
-function loveHalo(x, top, at, a, fw, t) {
-  const N = 10;
-  for (let i = 0; i < N; i++) {
-    const u = (i / N + t * .000045 + Math.sin(i * 7.1) * .02) % 1;      // posisi sepanjang busur (0..1)
-    const th = Math.PI * (.06 + .88 * u);
-    const wob = 1 + .12 * Math.sin(t / 520 + i * 2.3);
-    const rx = .82 * fw * wob, ry = (.72 + .14 * Math.sin(i * 3.7)) * fw * wob;
-    const o = at(top, 0, -.2);
-    const px = o.x + Math.cos(a) * Math.cos(th) * rx + Math.sin(a) * Math.sin(th) * ry;
-    const py = o.y + Math.sin(a) * Math.cos(th) * rx - Math.cos(a) * Math.sin(th) * ry;
-    const pulse = .5 + .5 * Math.sin(t / 380 + i * 1.9);
-    const size = fw * (.12 + .09 * pulse) * (i % 3 === 0 ? 1.3 : 1);
-    const alpha = Math.sin(Math.PI * u) ** .6 * (.6 + .4 * pulse);
-    heart(x, px, py, size, a + Math.sin(t / 700 + i) * .35, alpha);
+const love = { parts: [], last: 0, acc: 0 };
+function loveParticles(x, top, at, a, fw, t) {
+  const dt = love.last ? Math.min(.1, (t - love.last) / 1000) : 0;
+  love.last = t;
+  love.acc += dt * 10;                                  // ~9 hati per detik
+  while (love.acc >= 1) {
+    love.acc -= 1;
+    const r = Math.random();
+    love.parts.push({
+      th: Math.PI * (.5 + (Math.random() + Math.random() - 1) * .52),        // posisi di busur kepala (kanan → kiri)
+      rad: (Math.random() - .5) * .12,                  // sebaran tegak lurus garis kepala
+      size: (r < .15 ? .07 + Math.random() * .04 : .16 + Math.random() * .18),
+      rot: (Math.random() - .5) * 1.0, spin: (Math.random() - .5) * .5,
+      drift: .08 + Math.random() * .14, age: 0, life: 1.4 + Math.random() * 1.0, ci: (Math.random() * 4) | 0,
+    });
+  }
+  love.parts = love.parts.filter((p) => (p.age += dt) < p.life);
+  for (const p of love.parts) {
+    const u = p.age / p.life;
+    const pop = Math.min(1, u / .18);
+    const scale = .35 + .65 * (1 - (1 - pop) ** 3);     // membesar cepat di awal
+    const alpha = (u < .5 ? 1 : 1 - (u - .5) / .5) * .94;
+    // titik di kontur kepala (elips) + melayang ke luar sepanjang normal
+    const rx = .56, ry = .64, o = { u: 0, v: -.36 };
+    const dx = Math.cos(p.th), dy = Math.sin(p.th);
+    const nrm = Math.hypot(dx / rx, dy / ry) || 1;
+    const nx = dx / rx / nrm, ny = dy / ry / nrm;
+    const off = p.rad + p.drift * p.age;
+    const c = at(top, o.u + dx * rx + nx * off, o.v + dy * ry + ny * off + p.drift * .4 * p.age);
+    heart(x, c.x, c.y, p.size * fw * scale * 1.8 / 1.8, a + p.rot + p.spin * p.age, alpha, p.ci);
   }
 }
 
@@ -119,7 +137,7 @@ function drawFilter(x, id, P, t) {
       for (const s of [-1, 1]) { x.beginPath(); x.ellipse(s * fw * .1, 0, fw * .12, fw * .045, s * -.25, 0, 7); x.fill(); }
       x.restore(); break;
     }
-    case "love": loveHalo(x, top, at, a, fw, t); break;
+    case "love": loveParticles(x, top, at, a, fw, t); break;
   }
 }
 
