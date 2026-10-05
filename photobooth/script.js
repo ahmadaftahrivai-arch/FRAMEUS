@@ -1,6 +1,6 @@
 const $ = (id) => document.getElementById(id);
 const PREFIX = "ldrbooth-";
-const CW = 480, CH = 360, PAD = 28, GAP = 18; // ukuran sel foto 4:3
+const CW = 480, CH = 360, PAD = 44, GAP = 22; // ukuran sel foto 4:3
 
 /* ---------- Data: layout, frame, prompt ---------- */
 const LAYOUTS = {
@@ -54,6 +54,98 @@ const film = (x, w, h) => {
   for (let y = 12; y < h; y += 26) { x.fillRect(6, y, 10, 14); x.fillRect(w - 16, y, 10, 14); }
 };
 
+
+/* ---------- frame tambahan: riso (dua tinta), pola, pesta, alam, vintage ---------- */
+const paper = (c) => (x, w, h) => { x.fillStyle = c; x.fillRect(0, 0, w, h); };
+// titik halftone: radius mengikuti fungsi kerapatan k(px,py) dalam 0..1
+function halftone(x, w, h, color, angle, step, k, rMax) {
+  x.save(); x.fillStyle = color;
+  const a = angle * Math.PI / 180, cs = Math.cos(a), sn = Math.sin(a), diag = Math.hypot(w, h);
+  for (let u = -diag; u < diag; u += step) for (let v = -diag; v < diag; v += step) {
+    const px = w / 2 + u * cs - v * sn, py = h / 2 + u * sn + v * cs;
+    if (px < -step || py < -step || px > w + step || py > h + step) continue;
+    const r = rMax * Math.max(0, Math.min(1, k(px / w, py / h)));
+    if (r > .35) { x.beginPath(); x.arc(px, py, r, 0, 7); x.fill(); }
+  }
+  x.restore();
+}
+const RED = "#ee3b2f", BLUE = "#2536d6";
+const riso2 = (x, w, h) => {
+  x.fillStyle = "#f3ede0"; x.fillRect(0, 0, w, h);
+  x.globalCompositeOperation = "multiply";
+  halftone(x, w, h, RED, 15, 10, (u, v) => 1.05 - u * 1.25 + (v - .5) * .15, 4.4);
+  halftone(x, w, h, BLUE, 75, 10, (u, v) => u * 1.25 - .1 - (v - .5) * .15, 4.4);
+  x.globalCompositeOperation = "source-over";
+};
+const risoOne = (bg, ink, angle) => (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0, 0, w, h);
+  x.globalCompositeOperation = "multiply";
+  halftone(x, w, h, ink, angle, 9, (u, v) => .55 + .45 * Math.sin(v * 5.5 + u * 2), 3.6);
+  x.globalCompositeOperation = "source-over";
+};
+const misreg = (x, w, h) => {
+  x.fillStyle = "#f3ede0"; x.fillRect(0, 0, w, h);
+  x.globalCompositeOperation = "multiply";
+  x.lineWidth = 9;
+  x.strokeStyle = RED; x.strokeRect(10, 10, w - 20, h - 20);
+  x.strokeStyle = BLUE; x.strokeRect(16, 15, w - 20, h - 20);
+  x.fillStyle = RED; x.globalAlpha = .25; x.fillRect(0, h - 78, w, 78);
+  x.fillStyle = BLUE; x.fillRect(5, h - 73, w, 73); x.globalAlpha = 1;
+  x.globalCompositeOperation = "source-over";
+};
+const zigzag = (a, b, s) => (x, w, h) => {
+  x.fillStyle = a; x.fillRect(0, 0, w, h); x.strokeStyle = b; x.lineWidth = 5; x.lineJoin = "miter";
+  for (let y = 0; y < h + s; y += s * 1.6) { x.beginPath(); for (let i = 0; i * s / 2 <= w + s; i++) { const px = i * s / 2, py = y + (i % 2 ? s / 2 : 0); i ? x.lineTo(px, py) : x.moveTo(px, py); } x.stroke(); }
+};
+const tartan = (a, b, c) => (x, w, h) => {
+  x.fillStyle = a; x.fillRect(0, 0, w, h); x.globalCompositeOperation = "multiply";
+  x.fillStyle = b; for (let i = 20; i < w; i += 70) x.fillRect(i, 0, 22, h); for (let j = 16; j < h; j += 70) x.fillRect(0, j, w, 22);
+  x.fillStyle = c; for (let i = 44; i < w; i += 70) x.fillRect(i, 0, 5, h); for (let j = 40; j < h; j += 70) x.fillRect(0, j, w, 5);
+  x.globalCompositeOperation = "source-over";
+};
+const diagonal = (a, b, s) => (x, w, h) => {
+  x.fillStyle = a; x.fillRect(0, 0, w, h); x.fillStyle = b;
+  for (let i = -h; i < w + h; i += s * 2) { x.beginPath(); x.moveTo(i, 0); x.lineTo(i + s, 0); x.lineTo(i + s + h, h); x.lineTo(i + h, h); x.fill(); }
+};
+const heartPath = (x, cx, cy, r) => { x.beginPath(); x.moveTo(cx, cy + r * .9); x.bezierCurveTo(cx - r * 1.5, cy, cx - r * .8, cy - r * 1.1, cx, cy - r * .4); x.bezierCurveTo(cx + r * .8, cy - r * 1.1, cx + r * 1.5, cy, cx, cy + r * .9); x.fill(); };
+const hearts = (bg, fg) => (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0, 0, w, h); x.fillStyle = fg;
+  for (let j = 0, row = 0; j < h + 40; j += 46, row++) for (let i = row % 2 ? 23 : 0; i < w + 40; i += 46) heartPath(x, i, j, 9);
+};
+const starPath = (x, cx, cy, r) => { x.beginPath(); for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * .45 : r; x.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } x.closePath(); x.fill(); };
+const stars = (bg, fg) => (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0, 0, w, h); x.fillStyle = fg;
+  const r = rnd(21); for (let i = 0; i < 70; i++) { x.globalAlpha = .45 + r() * .55; starPath(x, r() * w, r() * h, 3 + r() * 8); } x.globalAlpha = 1;
+};
+const bunting = (bg, cols) => (x, w, h) => {
+  x.fillStyle = bg; x.fillRect(0, 0, w, h);
+  for (const [y0, dir] of [[0, 1], [h, -1]]) {
+    x.strokeStyle = "#8a6f5a"; x.lineWidth = 2; x.beginPath(); x.moveTo(0, y0 + dir * 4); x.lineTo(w, y0 + dir * 4); x.stroke();
+    for (let i = 0, k = 0; i < w; i += 42, k++) { x.fillStyle = cols[k % cols.length]; x.beginPath(); x.moveTo(i + 4, y0 + dir * 4); x.lineTo(i + 38, y0 + dir * 4); x.lineTo(i + 21, y0 + dir * 30); x.closePath(); x.fill(); }
+  }
+};
+const sepia = (x, w, h) => {
+  const g = x.createLinearGradient(0, 0, w, h); g.addColorStop(0, "#d9bf94"); g.addColorStop(1, "#b78f5e"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  const v = x.createRadialGradient(w / 2, h / 2, Math.min(w, h) * .3, w / 2, h / 2, Math.max(w, h) * .75); v.addColorStop(0, "rgba(60,35,10,0)"); v.addColorStop(1, "rgba(60,35,10,.45)"); x.fillStyle = v; x.fillRect(0, 0, w, h);
+};
+const newsprint = (x, w, h) => {
+  x.fillStyle = "#e9e3d3"; x.fillRect(0, 0, w, h); x.fillStyle = "rgba(60,55,48,.38)";
+  const r = rnd(33); for (let y = 10; y < h; y += 11) { let px = 8; while (px < w - 8) { const len = 14 + r() * 40; x.fillRect(px, y, Math.min(len, w - 8 - px), 3); px += len + 6; } }
+};
+const clouds = (x, w, h) => {
+  const g = x.createLinearGradient(0, 0, 0, h); g.addColorStop(0, "#9fd0f4"); g.addColorStop(1, "#d9efff"); x.fillStyle = g; x.fillRect(0, 0, w, h);
+  x.fillStyle = "rgba(255,255,255,.92)"; const r = rnd(5);
+  for (let i = 0; i < 16; i++) { const cx = r() * w, cy = r() * h, s = 18 + r() * 26; for (const [dx, dy, k] of [[0, 0, 1], [s * .9, s * .1, .8], [-s * .9, s * .15, .75], [s * .3, -s * .35, .7]]) { x.beginPath(); x.arc(cx + dx, cy + dy, s * k, 0, 7); x.fill(); } }
+};
+const leaves = (x, w, h) => {
+  x.fillStyle = "#cfe6c4"; x.fillRect(0, 0, w, h); const r = rnd(8), cols = ["#7fb069", "#5d9a54", "#a3c98e", "#468c4a"];
+  for (let i = 0; i < 90; i++) { x.save(); x.translate(r() * w, r() * h); x.rotate(r() * 6.28); x.fillStyle = cols[i % 4]; x.beginPath(); x.ellipse(0, 0, 8 + r() * 10, 18 + r() * 20, 0, 0, 7); x.fill(); x.strokeStyle = "rgba(255,255,255,.4)"; x.lineWidth = 1.5; x.beginPath(); x.moveTo(0, -14); x.lineTo(0, 14); x.stroke(); x.restore(); }
+};
+const rainbow = (x, w, h) => {
+  const cols = ["#ffc9c9", "#ffe2b8", "#fff4b0", "#cdeccb", "#c3dcf6", "#dcc9f2"], bh = h / cols.length;
+  cols.forEach((c, i) => { x.fillStyle = c; x.fillRect(0, i * bh, w, bh + 1); });
+};
+
 const FRAMES = [
   { id: "blush",  cat: "Polos",   name: "Blush",    bg: solid("#ffd1dc") },
   { id: "cream",  cat: "Polos",   name: "Krem",    bg: solid("#fff4e0") },
@@ -69,8 +161,23 @@ const FRAMES = [
   { id: "ball",   cat: "Pesta", name: "Balon", bg: balloons("#d9f0ff", ["#ff7aa2", "#ffd166", "#9b8cff", "#6bd6a8"]) },
   { id: "film",   cat: "Vintage",  name: "Film",     bg: film, dark: true },
   { id: "noir",   cat: "Vintage",  name: "Noir",     bg: solid("#3a2c2c"), dark: true },
+  { id: "zig",    cat: "Pola",     name: "Zigzag",   bg: zigzag("#fff3d6", "#f0a53a", 30) },
+  { id: "tart",   cat: "Pola",     name: "Tartan",   bg: tartan("#f6e7e0", "#e9858a", "#5e86c9") },
+  { id: "diag",   cat: "Pola",     name: "Diagonal", bg: diagonal("#e4f1e6", "#b4d8bb", 26) },
+  { id: "riso2",  cat: "Riso",     name: "Dua tinta", bg: riso2 },
+  { id: "risoR",  cat: "Riso",     name: "Tinta merah", bg: risoOne("#f4eadc", RED, 15) },
+  { id: "risoB",  cat: "Riso",     name: "Tinta biru", bg: risoOne("#f4eadc", BLUE, 75) },
+  { id: "mis",    cat: "Riso",     name: "Meleset",  bg: misreg },
+  { id: "heart",  cat: "Pesta",    name: "Hati",     bg: hearts("#ffe0e8", "#f48aa5") },
+  { id: "star",   cat: "Pesta",    name: "Bintang",  bg: stars("#1f2552", "#ffd45c"), dark: true },
+  { id: "bunt",   cat: "Pesta",    name: "Bendera",  bg: bunting("#fff6e8", ["#ff8fa8", "#ffd45c", "#7fc4f0", "#8fd6a4"]) },
+  { id: "cloud",  cat: "Alam",     name: "Awan",     bg: clouds },
+  { id: "leaf",   cat: "Alam",     name: "Daun",     bg: leaves },
+  { id: "rain",   cat: "Alam",     name: "Pelangi",  bg: rainbow },
+  { id: "sepia",  cat: "Vintage",  name: "Sepia",    bg: sepia },
+  { id: "news",   cat: "Vintage",  name: "Koran",    bg: newsprint },
 ];
-const CATS = ["Polos", "Pola", "Pesta", "Vintage"];
+const CATS = ["Polos", "Pola", "Riso", "Pesta", "Alam", "Vintage"];
 
 const PROMPTS = [
   "setengah hati masing-masing, nyatu di tengah", "peace di dekat pipi", "cubit pipi sendiri",
@@ -374,7 +481,9 @@ function render(canvas, { frame, shots, scale = 1, caption = "", date = false })
     if (shots && shots[i]) x.drawImage(shots[i], px, py, CW, CH);
   }
   if (shots) {
-    x.fillStyle = frame.dark ? "#f5f5f5" : "#3a2a30";
+    x.fillStyle = frame.dark ? "rgba(0,0,0,.4)" : "rgba(255,252,244,.78)";   // alas keterangan: terbaca di atas motif ramai
+    x.fillRect(PAD, H - footer + 8, W - PAD * 2, footer - 8 - PAD * .45);
+    x.fillStyle = frame.dark ? "#f5f5f5" : "#2a2420";
     x.textAlign = "center";
     x.font = "800 30px 'Bricolage Grotesque', system-ui, sans-serif";
     x.fillText(caption, W / 2, H - footer / 2 - (date ? 0 : -10));
