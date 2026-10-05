@@ -64,20 +64,30 @@
       </svg>
     </section>
 
+    <!-- PILIH BOOTH -->
+    <section data-screen="booth" class="screen center" hidden>
+      <h2 class="title">Pilih booth</h2>
+      <p class="sub">Tiap booth punya tampilan sendiri. Pasanganmu otomatis ikut.</p>
+      <div id="booths" class="booths" role="radiogroup" aria-label="Gaya booth"></div>
+      <button id="btnBoothBack" class="link-btn" type="button">← Kembali</button>
+    </section>
+
     <!-- ROOM -->
-    <section data-screen="room" class="screen" hidden>
-      <h2 class="title">Room kamu sudah siap</h2>
-      <p class="sub">Kirim kode ini ke pasanganmu, lalu minta dia pilih <b>Gabung ke room</b>.</p>
+    <section data-screen="room" class="screen center" hidden>
+      <h2 class="title">Kirim kode ini ke pasanganmu</h2>
+      <p class="sub">Mereka bisa mengetiknya, atau membuka link-mu.</p>
       <div class="stub">
         <div id="roomCode" class="code" aria-live="polite" aria-label="Kode room"></div>
         <div class="stub-actions">
-          <button id="btnCopy" class="btn" type="button">Salin kode</button>
-          <button id="btnShare" class="btn" type="button">Bagikan</button>
+          <button id="btnCopy" class="btn" type="button">Salin link</button>
+          <button id="btnShare" class="btn" type="button">Bagikan ↗</button>
         </div>
+        <p id="roomStatus" class="presence" data-state="wait" role="status"><i class="dot"></i><span>Menunggu pasanganmu…</span></p>
       </div>
-      <p id="roomStatus" class="presence" data-state="wait" role="status"><i class="dot"></i><span>Menunggu pasangan…</span></p>
-      <div class="actions"><button id="btnRoomNext" class="btn primary xl" type="button"><span class="btn-main">Lanjut pilih frame</span></button></div>
-      <p class="hint">Pasanganmu bisa gabung kapan saja, bahkan setelah kamu lanjut.</p>
+      <div class="room-links">
+        <button id="btnRoomSolo" class="link-btn" type="button">Foto sendiri saja</button>
+        <button id="btnLeave" class="link-btn" type="button">Keluar</button>
+      </div>
     </section>
 
     <!-- BENTUK STRIP -->

@@ -78,10 +78,16 @@ const PROMPTS = [
   "kaget bareng", "pose paling serius", "saling membelakangi", "pose cover majalah",
 ];
 
+const BOOTHS = {
+  classic:  { name: "Klasik",      desc: "bersih & cerah",         cat: "Polos",   frame: "blush" },
+  birthday: { name: "Ulang tahun", desc: "booth pesta",            cat: "Pesta",   frame: "conf" },
+  vintage:  { name: "Vintage",     desc: "photo automat 1930-an",  cat: "Vintage", frame: "noir" },
+};
+
 /* ---------- State ---------- */
 const S = {
   stream: null, remoteStream: null, peer: null, conn: null, isHost: false,
-  layout: "4cut", frame: "blush", cat: "Polos", code: "", bg: "none", filter: "none", fxTab: "bg", raw: null,
+  layout: "4cut", frame: "blush", cat: "Polos", code: "", booth: "classic", bg: "none", filter: "none", fxTab: "bg", raw: null,
   shots: [], picked: [], busy: false, screen: "home",
   touched: { layout: false, frame: false }, peerPick: { layout: null, frame: null },
 };
@@ -94,7 +100,7 @@ const send = (m) => { if (S.conn && S.conn.open) S.conn.send(m); };
 /* ---------- Navigasi ---------- */
 const STEP_OF = { layout: "frame", frame: "frame", shoot: "shoot", pick: "pick", style: "style", done: "done" };
 const STEP_NAME = ["Bentuk & frame", "Foto", "Pilih", "Sentuhan akhir", "Selesai"];
-const BACK_TO = { room: "home", layout: () => (S.peer ? "room" : "home"), frame: "layout", shoot: () => (S.busy ? null : "frame"), pick: "shoot", style: "pick" };
+const BACK_TO = { booth: "home", room: "booth", layout: () => (S.peer ? "room" : "home"), frame: "layout", shoot: () => (S.busy ? null : "frame"), pick: "shoot", style: "pick" };
 
 function go(name) {
   S.screen = name;
@@ -181,6 +187,8 @@ function setupConn(c) {
     $("homeStatus").textContent = "Tersambung!";
     setColors();
     if (!S.isHost && S.screen === "home") go("layout");
+    if (S.isHost && S.screen === "room") go("layout");
+    if (S.isHost) send({ t: "booth", booth: S.booth });
     sendPick();
     send({ t: "cat", cat: S.cat });
   });
@@ -189,6 +197,7 @@ function setupConn(c) {
 }
 function onMsg(m) {
   if (m.t === "pick") { S.peerPick = { layout: m.layout, frame: m.frame }; refreshSel(); }
+  if (m.t === "booth") applyBooth(m.booth, true);
   if (m.t === "cat") { S.cat = m.cat; if (S.screen === "frame") renderFrames(); }
   if (m.t === "next") {
     // Yang menekan Lanjut yang menentukan. Kalau kalian menekan bersamaan, pilihan host yang dipakai.
@@ -225,7 +234,7 @@ function openRoom(attempt = 0) {
   showCode(code);
   setPresence("wait", "Menyiapkan room…");
   S.peer = new Peer(PREFIX + code);
-  S.peer.on("open", () => setPresence("wait", "Menunggu pasangan…"));
+  S.peer.on("open", () => setPresence("wait", "Menunggu pasanganmu…"));
   S.peer.on("error", (e) => {
     if (e.type === "unavailable-id" && attempt < 3) { S.peer.destroy(); return openRoom(attempt + 1); }   // kode bentrok: buat kode baru
     setPresence("err", peerError(e));
@@ -233,23 +242,55 @@ function openRoom(attempt = 0) {
   S.peer.on("call", (call) => { call.answer(S.stream); call.on("stream", onRemote); });
   S.peer.on("connection", setupConn);
 }
+function applyBooth(id, fromPeer) {
+  const B = BOOTHS[id]; if (!B) return;
+  S.booth = id; S.cat = B.cat;
+  if (!S.touched.frame || !fromPeer) { S.frame = B.frame; }
+  document.body.dataset.booth = id;
+  if (!fromPeer) send({ t: "booth", booth: id });
+}
+function renderBooths() {
+  const box = $("booths");
+  box.innerHTML = "";
+  for (const [id, B] of Object.entries(BOOTHS)) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "booth"; b.dataset.id = id; b.dataset.booth = id;
+    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", id === S.booth);
+    b.innerHTML = `<span class="booth-art" aria-hidden="true"></span><span class="booth-cap"><b>${B.name}</b><small>${B.desc}</small></span>`;
+    b.onclick = () => { applyBooth(id, false); S.isHost = true; go("room"); openRoom(); };
+    box.append(b);
+  }
+}
 $("btnCreate").onclick = async () => {
   if (!(await ensureCam())) return;
   S.isHost = true;
-  go("room");
-  openRoom();
+  setColors();
+  renderBooths();
+  go("booth");
 };
-$("btnRoomNext").onclick = () => go("layout");
+$("btnBoothBack").onclick = () => go("home");
+{
+  const q = new URLSearchParams(location.search).get("room");
+  if (q) {
+    $("joinForm").hidden = false;
+    $("btnJoinToggle").setAttribute("aria-expanded", "true");
+    $("joinCode").value = q.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    $("homeStatus").textContent = "Kamu diundang ke sebuah room. Tekan Gabung untuk masuk.";
+  }
+}
+$("btnRoomSolo").onclick = () => { setColors(); go("layout"); };
+$("btnLeave").onclick = () => { if (S.peer) { try { S.peer.destroy(); } catch (e) {} S.peer = null; } S.conn = null; S.remoteStream = null; go("home"); };
 
+const roomLink = () => `${location.origin}${location.pathname}?room=${S.code}`;
 $("btnCopy").onclick = async () => {
-  const b = $("btnCopy"), old = "Salin kode";
-  try { await navigator.clipboard.writeText(S.code); b.textContent = "Tersalin ✓"; } catch (e) { b.textContent = "Salin manual ya"; }
+  const b = $("btnCopy"), old = "Salin link";
+  try { await navigator.clipboard.writeText(roomLink()); b.textContent = "Tersalin ✓"; } catch (e) { b.textContent = "Salin manual ya"; }
   setTimeout(() => (b.textContent = old), 1600);
 };
 $("btnShare").onclick = async () => {
-  const text = `Ayo foto bareng di frameus! Buka ${location.href.split("?")[0]} lalu gabung dengan kode ${S.code}`;
-  if (navigator.share) { try { await navigator.share({ title: "frameus", text }); } catch (e) {} }
-  else { try { await navigator.clipboard.writeText(text); $("btnShare").textContent = "Pesan tersalin ✓"; setTimeout(() => ($("btnShare").textContent = "Bagikan"), 1600); } catch (e) {} }
+  const text = `Ayo foto bareng di frameus! Buka ${roomLink()} (kode ${S.code})`;
+  if (navigator.share) { try { await navigator.share({ title: "frameus", text, url: roomLink() }); } catch (e) {} }
+  else { try { await navigator.clipboard.writeText(text); $("btnShare").textContent = "Pesan tersalin ✓"; setTimeout(() => ($("btnShare").textContent = "Bagikan ↗"), 1600); } catch (e) {} }
 };
 
 $("joinCode").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""); });
@@ -551,3 +592,12 @@ $("btnShareImg").onclick = async () => {
 $("btnAgain").onclick = () => { S.shots = []; S.picked = []; go("layout"); };
 
 go("home");
+{
+  const q = new URLSearchParams(location.search).get("room");   // tautan undangan: buka kolom gabung dengan kode terisi
+  if (q) {
+    $("joinForm").hidden = false;
+    $("btnJoinToggle").setAttribute("aria-expanded", "true");
+    $("joinCode").value = q.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    $("homeStatus").textContent = "Kamu diundang ke sebuah room. Tekan Gabung untuk masuk.";
+  }
+}
