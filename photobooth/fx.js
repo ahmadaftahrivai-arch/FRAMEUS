@@ -275,7 +275,7 @@ export function ensure(onState) {
       }),
       FaceLandmarker.createFromOptions(fs, {
         baseOptions: { modelAssetPath: "vendor/models/face_landmarker.task", delegate },
-        runningMode: "VIDEO", numFaces: 2,
+        runningMode: "VIDEO", numFaces: 2, outputFacialTransformationMatrixes: true,
       }),
     ]);
     try { [seg, face] = await mk("GPU"); } catch (e) { [seg, face] = await mk("CPU"); }
@@ -324,7 +324,7 @@ export function render(video, canvas, bgId, filterId) {
       import("./fx3d.js").then((m) => { snap3d = m; }).catch((e) => console.warn("3D gagal, pakai 2D", e));
     }
     (r.faceLandmarks || []).forEach((lm, idx) => {
-      if (filterId === "snapstache" && snap3d) snap3d.drawFace(x, lm, { vw, vh, s, ox, oy }, idx);
+      if (filterId === "snapstache" && snap3d) snap3d.drawFace(x, lm, { vw, vh, s, ox, oy }, idx, r.facialTransformationMatrixes && r.facialTransformationMatrixes[idx]);
       else drawFilter(x, filterId, (i) => ({ x: lm[i].x * vw * s + ox, y: lm[i].y * vh * s + oy }), performance.now(), idx);
     });
   }

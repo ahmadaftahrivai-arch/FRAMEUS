@@ -166,7 +166,7 @@ function buildStache() {
 const face = new THREE.Group();
 const glasses = buildGlasses();
 glasses.scale.setScalar(.69);
-glasses.position.set(0, 0, .13);
+glasses.position.set(0, 0, .09);
 const stache = buildStache();
 stache.scale.setScalar(.38);
 face.add(glasses, stache);
@@ -178,17 +178,26 @@ face.add(occluder);
 scene.add(face);
 
 const smooth = [];
-const _v = (lm, i, m) => new THREE.Vector3(lm[i].x * m.vw * m.s + m.ox - W / 2, -(lm[i].y * m.vh * m.s + m.oy - H / 2), -lm[i].z * m.vw * m.s);
+// Titik dalam piksel kanvas (z diabaikan: kedalaman landmark kurang akurat di kamera nyata; rotasi diambil dari matriks pose MediaPipe).
+const _v = (lm, i, m) => new THREE.Vector3(lm[i].x * m.vw * m.s + m.ox - W / 2, -(lm[i].y * m.vh * m.s + m.oy - H / 2), 0);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const _e = new THREE.Euler();
 
 /** Gambar kacamata + kumis 3D untuk satu wajah ke `x` (konteks sudah dalam transformasi mirror). */
-export function drawFace(x, lm, m, idx) {
+export function drawFace(x, lm, m, idx, poseMatrix) {
   const P = (i) => _v(lm, i, m);
-  const right = P(454).sub(P(234)), upv = P(10).sub(P(152));
-  const fw = right.length();
-  const xr = right.clone().normalize();
-  const zr = new THREE.Vector3().crossVectors(xr, upv).normalize();
-  const yr = new THREE.Vector3().crossVectors(zr, xr);
-  const q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(xr, yr, zr));
+  const eyeV = P(263).sub(P(33));
+  const roll = Math.atan2(eyeV.y, eyeV.x);                                  // kemiringan kepala dari garis mata (stabil)
+  let pitch = 0, yaw = 0;
+  if (poseMatrix && poseMatrix.data) {                                      // menoleh/mendongak dari matriks pose MediaPipe
+    const mat = new THREE.Matrix4().fromArray(poseMatrix.data), q0 = new THREE.Quaternion();
+    mat.decompose(new THREE.Vector3(), q0, new THREE.Vector3());
+    _e.setFromQuaternion(q0, "YXZ");
+    pitch = clamp(_e.x, -.5, .5); yaw = clamp(_e.y, -.8, .8);
+  }
+  const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ"));
+  const w2d = P(454).sub(P(234)).length();
+  const fw = w2d / Math.max(Math.cos(yaw), .8);                             // lebar kepala sebenarnya (kompensasi saat menoleh)
   const E = P(33).add(P(263)).multiplyScalar(.5);
   const mc = P(2).add(P(0)).multiplyScalar(.5);
   const st = smooth[idx] || (smooth[idx] = { q: q.clone(), E: E.clone(), fw, mc: mc.clone() });
@@ -196,8 +205,9 @@ export function drawFace(x, lm, m, idx) {
   face.quaternion.copy(st.q);
   face.position.copy(st.E);
   face.scale.setScalar(st.fw);
-  const local = st.mc.clone().sub(st.E).applyQuaternion(st.q.clone().invert()).divideScalar(st.fw);   // kumis menempel di antara hidung & bibir
-  stache.position.set(local.x, local.y, local.z + .05);
+  // posisi kumis relatif terhadap mata, di sumbu 2D kepala (kemiringan saja)
+  const d = st.mc.clone().sub(st.E), cr = Math.cos(roll), sr = Math.sin(roll);
+  stache.position.set((d.x * cr + d.y * sr) / st.fw, (-d.x * sr + d.y * cr) / st.fw, .06);
   renderer.render(scene, cam);
   x.drawImage(canvas, 0, 0, W, H);
 }
