@@ -22,25 +22,37 @@ const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
 /* ---------- Kacamata ---------- */
 // Bentuk lensa dalam satuan "u" (sama dengan versi 2D), sumbu y ke atas. m = +1 kanan, -1 kiri.
-// Bentuk persegi membulat hasil ukur dari video lens asli (e = jarak antar sudut mata). m = +1 kanan, -1 kiri.
-function roundRect(m, x0, x1, yTop, yBot, rTI, rTO, rBO, rBI) {
-  const Y = (y) => -y, sh = new THREE.Shape();
-  sh.moveTo(m * (x0 + rTI), Y(yTop));
-  sh.lineTo(m * (x1 - rTO), Y(yTop));
-  sh.quadraticCurveTo(m * x1, Y(yTop), m * x1, Y(yTop + rTO));
-  sh.lineTo(m * x1, Y(yBot - rBO));
-  sh.bezierCurveTo(m * x1, Y(yBot - rBO * .3), m * (x1 - rBO * .3), Y(yBot), m * (x1 - rBO), Y(yBot));
-  sh.lineTo(m * (x0 + rBI), Y(yBot));
-  sh.bezierCurveTo(m * (x0 + rBI * .3), Y(yBot), m * x0, Y(yBot - rBI * .3), m * x0, Y(yBot - rBI));
-  sh.lineTo(m * x0, Y(yTop + rTI));
-  sh.quadraticCurveTo(m * x0, Y(yTop), m * (x0 + rTI), Y(yTop));
+// Lensa wayfarer: trapesium membulat (atas lebar, sudut luar atas naik, bawah membulat besar). Satuan e = jarak antar sudut mata.
+// pts: [kiri-atas(dalam), kanan-atas(luar), kanan-bawah(luar), kiri-bawah(dalam)] untuk lensa kanan (x+); m=-1 mencerminkan.
+function roundQuad(m, pts, rad) {
+  const P = pts.map(([x, y]) => new THREE.Vector2(m * x, -y)), sh = new THREE.Shape();
+  const n = P.length;
+  for (let i = 0; i < n; i++) {
+    const p = P[i], prev = P[(i + n - 1) % n], next = P[(i + 1) % n], r = rad[i];
+    const a = p.clone().add(prev.clone().sub(p).setLength(Math.min(r, prev.distanceTo(p) / 2)));
+    const b = p.clone().add(next.clone().sub(p).setLength(Math.min(r, next.distanceTo(p) / 2)));
+    if (i === 0) sh.moveTo(a.x, a.y); else sh.lineTo(a.x, a.y);
+    sh.quadraticCurveTo(p.x, p.y, b.x, b.y);
+  }
+  sh.closePath();
   return sh;
 }
-const LENS = { x0: .19, x1: .6, yTop: -.12, yBot: .325 };                         // bukaan kaca
-const lensShape = (m) => roundRect(m, LENS.x0, LENS.x1, LENS.yTop, LENS.yBot, .05, .1, .22, .16);
-const outerShape = (m) => roundRect(m, .14, .66, -.2, .385, .075, .14, .27, .21);   // bingkai: atas tebal, sisi/bawah tipis
+const LENS_PTS = [[.17, -.12], [.67, -.18], [.6, .325], [.21, .325]];
+const OUT_PTS = [[.12, -.2], [.73, -.27], [.65, .39], [.16, .39]];
+const LENS = { x0: .17, x1: .67, yTop: -.18, yBot: .325 };                         // bbox bukaan kaca
+const lensShape = (m) => roundQuad(m, LENS_PTS, [.07, .06, .26, .2]);
+const outerShape = (m) => roundQuad(m, OUT_PTS, [.1, .08, .31, .26]);              // bingkai: atas tebal, sisi/bawah tipis
 
-const frameMat = new THREE.MeshStandardMaterial({ color: 0x2a201c, roughness: .55, metalness: .05 });
+function studioEnv() {                                  // lingkungan lembut untuk kilau bingkai
+  const c = document.createElement("canvas"); c.width = 256; c.height = 128;
+  const g = c.getContext("2d"), gr = g.createLinearGradient(0, 0, 0, 128);
+  gr.addColorStop(0, "#d8d6e6"); gr.addColorStop(.5, "#8a8896"); gr.addColorStop(1, "#2a2624");
+  g.fillStyle = gr; g.fillRect(0, 0, 256, 128);
+  g.fillStyle = "rgba(255,255,255,.7)"; g.fillRect(40, 18, 60, 22);               // softbox
+  const tex = new THREE.CanvasTexture(c); tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+const frameMat = new THREE.MeshStandardMaterial({ color: 0x232124, roughness: .38, metalness: .12, envMap: studioEnv(), envMapIntensity: .75 });
 const LW = LENS.x1 - LENS.x0 + .04, LH = LENS.yBot - LENS.yTop + .04;               // bbox bukaan kaca (+margin)
 const LCX = (LENS.x0 + LENS.x1) / 2, LCY = -(LENS.yTop + LENS.yBot) / 2;
 const lensMask = (m) => {                                                          // alphaMap berbentuk lensa
@@ -59,19 +71,30 @@ const lensMask = (m) => {                                                       
 function makeReflection() {
   const S = 512, c = document.createElement("canvas"); c.width = S; c.height = S;
   const g = c.getContext("2d");
-  const sky = g.createLinearGradient(0, 0, 0, S * .7);
-  sky.addColorStop(0, "#5a5cc6"); sky.addColorStop(1, "#9893e4");
+  const sky = g.createLinearGradient(0, 0, 0, S * .75);
+  sky.addColorStop(0, "#4d51b8"); sky.addColorStop(.6, "#8d89d8"); sky.addColorStop(1, "#b2aad8");
   g.fillStyle = sky; g.fillRect(0, 0, S, S);
+  const rr = rng(5);
   const fac = g.createLinearGradient(0, S * .3, 0, S);
-  fac.addColorStop(0, "#b09474"); fac.addColorStop(1, "#6e5646");
+  fac.addColorStop(0, "#a58a6c"); fac.addColorStop(.5, "#85705c"); fac.addColorStop(1, "#4f3f35");
   g.fillStyle = fac;
-  g.beginPath(); g.moveTo(0, S * .36); g.lineTo(S * .3, S * .46); g.lineTo(S * .5, S * .4); g.lineTo(S * .72, S * .55); g.lineTo(S * .8, S * .5);
-  g.lineTo(S, S * .66); g.lineTo(S, S); g.lineTo(0, S); g.closePath(); g.fill();
-  g.fillStyle = "rgba(235,215,185,.28)";                                  // jendela lengkung samar
-  for (let y = S * .58; y < S * .95; y += 52) for (let x = 24; x < S - 30; x += 46) { g.beginPath(); g.arc(x + 9, y, 9, Math.PI, 0); g.rect(x, y, 18, 24); g.fill(); }
-  g.fillStyle = "rgba(70,48,36,.35)"; g.fillRect(S * .62, S * .5, S * .06, S * .5);
+  g.beginPath(); g.moveTo(0, S * .4);                                        // garis atap bangunan tua yang tidak beraturan
+  for (let x = 0; x <= S; x += 32) g.lineTo(x, S * (.42 + .08 * Math.sin(x / 60) + rr() * .06 + (x / S) * .12));
+  g.lineTo(S, S); g.lineTo(0, S); g.closePath(); g.fill();
+  g.fillStyle = "rgba(225,205,175,.22)";                                     // jendela samar
+  for (let y = S * .6; y < S * .98; y += 56) for (let x = 20; x < S - 26; x += 50) { g.beginPath(); g.arc(x + 10, y, 10, Math.PI, 0); g.rect(x, y, 20, 28); g.fill(); }
+  const haze = g.createLinearGradient(0, S * .3, 0, S * .6);                 // kabut atmosfer di batas langit & bangunan
+  haze.addColorStop(0, "rgba(170,160,215,0)"); haze.addColorStop(.5, "rgba(170,160,215,.35)"); haze.addColorStop(1, "rgba(170,160,215,0)");
+  g.fillStyle = haze; g.fillRect(0, S * .3, S, S * .3);
   const soft = document.createElement("canvas"); soft.width = S; soft.height = S;
-  const sg = soft.getContext("2d"); sg.filter = "blur(2.5px)"; sg.drawImage(c, 0, 0);
+  const sg = soft.getContext("2d"); sg.filter = "blur(4px)"; sg.drawImage(c, 0, 0);
+  sg.filter = "none";
+  const vg = sg.createRadialGradient(S / 2, S / 2, S * .25, S / 2, S / 2, S * .72);   // vinyet: tepi lensa lebih gelap
+  vg.addColorStop(0, "rgba(20,18,30,0)"); vg.addColorStop(1, "rgba(20,18,30,.55)");
+  sg.fillStyle = vg; sg.fillRect(0, 0, S, S);
+  const img = sg.getImageData(0, 0, S, S), nr = rng(9);                       // grain halus
+  for (let i = 0; i < img.data.length; i += 4) { const n = (nr() - .5) * 14; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n; }
+  sg.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(soft);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
@@ -84,7 +107,7 @@ function buildGlasses() {
   for (const m of [1, -1]) {
     const outer = outerShape(m);
     outer.holes.push(lensShape(m));
-    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .05, bevelEnabled: true, bevelThickness: .01, bevelSize: .008, bevelSegments: 3, curveSegments: 16 }), frameMat);
+    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .05, bevelEnabled: true, bevelThickness: .016, bevelSize: .012, bevelSegments: 4, curveSegments: 16 }), frameMat);
     frame.position.z = -.025;
     grp.add(frame);
     const geo = new THREE.PlaneGeometry(LW, LH, 20, 20);                         // kaca melengkung tipis + alphaMap bentuk lensa
@@ -101,10 +124,10 @@ function buildGlasses() {
     lens.renderOrder = 2;
     grp.add(lens);
     const arm = new THREE.Mesh(new THREE.BoxGeometry(.04, .05, .9), frameMat);        // gagang pendek dari sudut luar atas ke telinga
-    arm.position.set(m * .67, -(-.17), -.42);
+    arm.position.set(m * .74, .22, -.42);
     grp.add(arm);
   }
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.2, .075, .05), frameMat);      // jembatan tebal di atas hidung
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.18, .075, .05), frameMat);      // jembatan tebal di atas hidung
   bridge.position.set(0, .115, 0);
   grp.add(bridge);
   return grp;
@@ -180,6 +203,8 @@ occluder.renderOrder = -1;
 face.add(occluder);
 scene.add(face);
 
+const shadowCv = document.createElement("canvas"); shadowCv.width = W; shadowCv.height = H;
+const shadowCtx = shadowCv.getContext("2d");
 const smooth = [];
 // Titik dalam piksel kanvas (z diabaikan: kedalaman landmark kurang akurat di kamera nyata; rotasi diambil dari matriks pose MediaPipe).
 const _v = (lm, i, m) => new THREE.Vector3(lm[i].x * m.vw * m.s + m.ox - W / 2, -(lm[i].y * m.vh * m.s + m.oy - H / 2), 0);
@@ -214,5 +239,13 @@ export function drawFace(x, lm, m, idx, poseMatrix) {
   const d = st.mc.clone().sub(st.E), cr = Math.cos(roll), sr = Math.sin(roll);
   stache.position.set((d.x * cr + d.y * sr) / st.fw, (-d.x * sr + d.y * cr) / st.fw, .06);
   renderer.render(scene, cam);
-  x.drawImage(canvas, 0, 0, W, H);
+  // bayangan lembut kacamata/kumis di kulit, lalu tempel dengan blur tipis agar menyatu dengan kualitas webcam
+  const sx = shadowCtx;
+  sx.clearRect(0, 0, W, H);
+  sx.globalCompositeOperation = "source-over"; sx.drawImage(canvas, 0, 0);
+  sx.globalCompositeOperation = "source-in"; sx.fillStyle = "rgba(10,6,4,.5)"; sx.fillRect(0, 0, W, H);
+  x.save();
+  x.filter = "blur(5px)"; x.globalAlpha = .55; x.drawImage(shadowCv, 0, 7 * (st.fw / 330));
+  x.filter = "blur(0.7px)"; x.globalAlpha = 1; x.drawImage(canvas, 0, 0, W, H);
+  x.restore();
 }
