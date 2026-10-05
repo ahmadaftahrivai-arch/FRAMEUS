@@ -66,7 +66,7 @@ function heart(x, cx, cy, w, rot, alpha, color, blur) {
   x.restore();
 }
 const loveState = [];
-const CROWN_SLOTS = 16, CROWN_COLORS = ["#ff47a6", "#f23c9a", "#ff4fae", "#e8369a"];
+const CROWN_SLOTS = 17, CROWN_COLORS = ["#ff47a6", "#f23c9a", "#ff4fae", "#e8369a"];
 const backOut = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;      // membesar sedikit melewati ukuran akhir
 function crownHeart(i, now) {
   const R = Math.random;
@@ -77,7 +77,7 @@ function crownHeart(i, now) {
     i, forehead, th,
     size: forehead ? .07 + R() * .03 : k < .2 ? .1 + R() * .05 : k < .65 ? .19 + R() * .07 : .27 + R() * .08,
     u: (R() - .5) * .3, v: -.12 + R() * .1,
-    rad: (R() - .5) * .06, color: CROWN_COLORS[(R() * CROWN_COLORS.length) | 0],
+    rad: (R() - .5) * .09, color: CROWN_COLORS[(R() * CROWN_COLORS.length) | 0],
     alpha: R() < .25 ? .6 : .92, rot: (R() - .5) * 1.1, ph: R() * 6,
     birth: now + R() * 300, life: (forehead ? 1.2 : 1.7) + R() * 1.0,
   };
@@ -99,7 +99,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   }
   st.float = st.float.filter((p) => (p.age += dt) < p.life).slice(-2);
   // mahkota di garis rambut
-  const rx = .6, ry = .64;
+  const rx = .56, ry = .42;
   for (let n = 0; n < st.crown.length; n++) {
     let h = st.crown[n];
     let age = (t - h.birth) / 1000;
@@ -111,7 +111,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
     if (h.forehead) c = at(top, h.u, h.v);
     else {
       const dx = Math.cos(h.th), dy = Math.sin(h.th);
-      c = at(top, dx * (rx + h.rad), -.3 + dy * (ry + h.rad));
+      c = at(top, dx * (rx + h.rad), -.16 + dy * (ry + h.rad * 1.2));
     }
     heart(x, c.x, c.y, h.size * fw * sc, a + h.rot * .6, h.alpha * (1 - out * .5), h.color, 0);
   }
