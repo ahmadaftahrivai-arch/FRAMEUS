@@ -8,17 +8,12 @@
   <meta name="description" content="Foto berdua walau beda kota. Kamera kalian tampil berdampingan dan hasilnya jadi satu strip foto.">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="cs-sheet" aria-hidden="true">
-    <i data-n="1A"></i><i data-n="2A" class="a"></i><i data-n="3A" class="b"></i><i data-n="4A"></i><i data-n="5A" class="c"></i><i data-n="6A"></i><i data-n="7A" class="a"></i><i data-n="8A" class="b"></i><i data-n="9A"></i><i data-n="10A" class="b"></i><i data-n="11A" class="c"></i><i data-n="12A"></i>
-  </div>
-  <div class="cs-veil" aria-hidden="true"></div>
+<body data-theme="struk">
   <header class="bar">
     <button id="btnBack" class="icon-btn" aria-label="Kembali" hidden>
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
     <a class="brand" href="./" aria-label="frameus, ke beranda"><span class="b-a">frame</span><span class="b-b">us</span></a>
-    <button id="btnTheme" class="theme-btn" type="button" aria-label="Ganti tema tampilan"><span class="theme-dot" aria-hidden="true"></span><span id="themeName">Poster</span></button>
     <div id="stepper" class="stepper" hidden>
       <span id="stepLabel" class="step-label"></span>
       <ol id="steps" aria-hidden="true"><li data-s="frame"></li><li data-s="shoot"></li><li data-s="pick"></li><li data-s="style"></li><li data-s="done"></li></ol>
@@ -41,7 +36,6 @@
           <span class="cta-main">Buat room</span>
           <span class="cta-sub">kamu jadi tuan rumah, lalu kirim kode ke dia</span>
           <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
-          <svg class="gp" viewBox="0 0 260 80" preserveAspectRatio="none" fill="none" stroke="#ff6fa8" stroke-width="3.5" stroke-linecap="round" aria-hidden="true"><path d="M6 44C4 14 60 6 130 8s122 6 124 34-52 32-124 30S8 70 6 44z"/></svg>
         </button>
 
         <form id="joinForm" class="join" autocomplete="off">
@@ -59,12 +53,10 @@
           <p>Izinkan akses kamera di browser, tutup aplikasi lain yang memakainya, dan buka lewat alamat <b>https</b>. Lalu coba lagi.</p>
         </div>
         <div class="rc-bar" aria-hidden="true"></div>
-        <ol class="po-steps" aria-hidden="true"><li><b>01</b>buat room</li><li><b>02</b>kirim kode</li><li><b>03</b>foto berdua</li></ol>
         <p class="foot">Kamera dan foto diproses di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
       </div>
 
-      <div class="hero-art" aria-hidden="true"><i class="po-c1"></i><i class="po-c2"></i></div>
-    </section>
+      </section>
 
     <!-- ROOM -->
     <section data-screen="room" class="screen room" hidden>

@@ -198,21 +198,41 @@ const frameDef = () => FRAMES.find((f) => f.id === S.frame);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const send = (m) => { if (S.conn && S.conn.open) S.conn.send(m); };
 
-/* ---------- Tema tampilan ---------- */
-const THEMES = [{ id: "poster", name: "Poster" }, { id: "struk", name: "Struk" }, { id: "kontak", name: "Kontak" }];
-function setTheme(id, save = true) {
-  const t = THEMES.find((x) => x.id === id) || THEMES[0];
-  document.body.dataset.theme = t.id;
-  $("themeName").textContent = t.name;
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = { poster: "#f4f3ef", struk: "#dcdcd8", kontak: "#0d0d0e" }[t.id];
-  if (save) { try { localStorage.setItem("frameus.theme", t.id); } catch (e) {} }
+/* ---------- Struk: kepala, daftar pesanan, kaki ---------- */
+const RC_NO = String(Math.floor(Math.random() * 9000) + 1000);
+const two = (n) => String(n).padStart(2, "0");
+function receiptMeta() {
+  const d = new Date();
+  return `NO. ${RC_NO} · ${two(d.getDate())}/${two(d.getMonth() + 1)}/${d.getFullYear()} · ${two(d.getHours())}:${two(d.getMinutes())}`;
 }
-$("btnTheme").onclick = () => {
-  const i = THEMES.findIndex((x) => x.id === document.body.dataset.theme);
-  setTheme(THEMES[(i + 1) % THEMES.length].id);
-};
-{ let saved = null; try { saved = localStorage.getItem("frameus.theme"); } catch (e) {} setTheme(saved || "poster", false); }
+function tallyHTML(done) {
+  const L = LAYOUTS[S.layout], F = FRAMES.find((f) => f.id === S.frame);
+  const rows = [[`1× strip ${L.name.toLowerCase()}`, "gratis"], [`1× frame ${F ? F.name.toLowerCase() : "-"}`, "gratis"]];
+  if (S.screen !== "layout" && S.screen !== "frame") rows.push([`${L.n}× foto${S.hasRemote || hasRemote() ? " (berdua)" : ""}`, "gratis"]);
+  const li = rows.map(([a, b]) => `<li><span>${a}</span><span>${b}</span></li>`).join("");
+  const total = `<li class="rc-total"><b>TOTAL</b><b><mark>Rp 0</mark></b></li>` + (done ? `<li class="rc-back"><span>KEMBALI</span><span>1 kenangan ♥</span></li>` : "");
+  return `<ul class="rc-items">${li}${total}</ul>`;
+}
+function dressReceipt(name) {
+  document.querySelectorAll(".rc-dress").forEach((n) => n.remove());
+  if (name === "home") return;
+  const sec = document.querySelector(`section[data-screen="${name}"]`);
+  if (!sec) return;
+  const head = document.createElement("div");
+  head.className = "rc-dress rc-meta"; head.textContent = receiptMeta();
+  sec.prepend(head);
+  if (["layout", "frame", "shoot", "pick", "style", "done"].includes(name)) {
+    const t = document.createElement("div");
+    t.className = "rc-dress rc-tally"; t.innerHTML = tallyHTML(name === "done");
+    const anchor = sec.querySelector(".sub") || sec.querySelector(".title");
+    const act = sec.querySelector(".actions");
+    if (act) act.before(t); else if (name === "shoot") sec.append(t); else anchor.after(t);
+  }
+  const foot = document.createElement("div");
+  foot.className = "rc-dress rc-foot";
+  foot.innerHTML = '<div class="rc-bar"></div><p>foto diproses di perangkatmu · terima kasih</p>';
+  sec.append(foot);
+}
 
 /* ---------- Navigasi ---------- */
 const STEP_OF = { layout: "frame", frame: "frame", shoot: "shoot", pick: "pick", style: "style", done: "done" };
@@ -221,7 +241,6 @@ const BACK_TO = { room: "home", layout: () => (S.peer ? "room" : "home"), frame:
 
 function go(name) {
   S.screen = name;
-  document.body.dataset.screen = name;
   document.querySelectorAll("[data-screen]").forEach((sec) => (sec.hidden = sec.dataset.screen !== name));
   const cur = STEP_OF[name];
   const idx = ["frame", "shoot", "pick", "style", "done"].indexOf(cur);
@@ -232,6 +251,7 @@ function go(name) {
   if (name === "shoot") attachVideos();
   if (name === "frame") renderFrames();
   if (name === "layout") renderLayouts();
+  dressReceipt(name);
   window.scrollTo(0, 0);
 }
 $("btnBack").onclick = () => {
@@ -464,7 +484,9 @@ function mark(node, isMe, isPeer) {
   const row = node.querySelector(".who-row");
   if (row) row.innerHTML = (isMe ? '<span class="who me">Kamu</span>' : "") + (isPeer ? '<span class="who peer">Dia</span>' : "");
 }
+function refreshTally() { const t = document.querySelector(".rc-tally"); if (t) t.innerHTML = tallyHTML(S.screen === "done"); }
 function refreshSel() {
+  refreshTally();
   const pl = S.peerPick.layout, pf = S.peerPick.frame;
   document.querySelectorAll("#layouts .opt").forEach((b) => mark(b, b.dataset.id === S.layout, b.dataset.id === pl));
   document.querySelectorAll("#frames .fcard").forEach((b) => mark(b, b.dataset.id === S.frame, b.dataset.id === pf));
