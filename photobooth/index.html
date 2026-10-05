@@ -3,17 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f7f8f9">
-  <title>frameus — bilik foto untuk dua orang</title>
+  <meta name="theme-color" content="#efe9dd">
+  <title>frameus — dua kota, satu frame</title>
   <meta name="description" content="Foto berdua walau beda kota. Kamera kalian tampil berdampingan dan hasilnya jadi satu strip foto.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="bar">
     <button id="btnBack" class="icon-btn" aria-label="Kembali" hidden>
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"><path d="M15 5l-7 7 7 7"/></svg>
     </button>
-    <a class="brand" href="./" aria-label="frameus, ke beranda">frameus<span class="brand-heart" aria-hidden="true">♥</span></a>
+    <a class="brand" href="./" aria-label="frameus, ke beranda"><span class="b-a">frame</span><span class="b-b">us</span></a>
     <div id="stepper" class="stepper" hidden>
       <span id="stepLabel" class="step-label"></span>
       <ol id="steps" aria-hidden="true"><li data-s="frame"></li><li data-s="shoot"></li><li data-s="pick"></li><li data-s="style"></li><li data-s="done"></li></ol>
@@ -26,67 +26,73 @@
     <!-- BERANDA -->
     <section data-screen="home" class="screen home">
       <div class="hero-copy">
-        <span class="pill">untuk berdua</span>
-        <h1>Photobooth</h1>
-        <p class="lead">Satu strip foto, kalian berdua di dalamnya, diambil dari dua tempat sekaligus.</p>
+        <p class="kicker">photobooth online buat berdua</p>
+        <h1><span class="h-a">Dua kota,</span> <span class="h-b">satu frame.</span></h1>
+        <p class="lead">Kamera kalian tersambung langsung dan dipotret di detik yang sama. Hasilnya satu strip foto, kalian berdua di dalamnya.</p>
 
-        <div class="rows">
-          <button id="btnCreate" class="row-btn dark" type="button"><b>Buat room</b><span>dengan pasanganmu</span></button>
-          <button id="btnJoinToggle" class="row-btn" type="button" aria-expanded="false" aria-controls="joinForm"><b>Gabung ke room</b><span>pakai kode</span></button>
-          <form id="joinForm" class="join" autocomplete="off" hidden>
-            <label class="sr" for="joinCode">Kode room</label>
-            <input id="joinCode" name="code" placeholder="KODE" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false">
-            <button id="btnJoin" class="btn dark" type="submit">Gabung</button>
-          </form>
-        </div>
-        <div class="chips-row"><button id="btnSolo" class="chip-btn" type="button"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Sendiri saja</button></div>
+        <button id="btnCreate" class="cta" type="button">
+          <span class="cta-main">Buat room</span>
+          <span class="cta-sub">kamu jadi tuan rumah, lalu kirim kode ke dia</span>
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square" aria-hidden="true"><path d="M4 12h15M13 6l6 6-6 6"/></svg>
+        </button>
+
+        <form id="joinForm" class="join" autocomplete="off">
+          <label class="join-label" for="joinCode">Sudah dikasih kode?</label>
+          <div class="join-row">
+            <input id="joinCode" name="code" placeholder="_ _ _ _ _" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false">
+            <button id="btnJoin" class="btn" type="submit">Gabung</button>
+          </div>
+        </form>
+        <button id="btnSolo" class="text-link" type="button">atau foto sendiri dulu</button>
 
         <p id="homeStatus" class="status" role="status" aria-live="polite"></p>
         <div id="camError" class="alert" role="alert" hidden>
-          <strong>Kamera belum bisa dipakai.</strong>
-          <p>Izinkan akses kamera di browser, pastikan tidak dipakai aplikasi lain, dan buka lewat alamat <b>https</b>. Lalu coba lagi.</p>
+          <strong>Kameranya belum bisa dipakai.</strong>
+          <p>Izinkan akses kamera di browser, tutup aplikasi lain yang memakainya, dan buka lewat alamat <b>https</b>. Lalu coba lagi.</p>
         </div>
-        <p class="foot">Kamera dan foto diproses langsung di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
+        <p class="foot">Kamera dan foto diproses di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
       </div>
 
-      <svg class="hero-art" viewBox="-10 0 190 480" aria-hidden="true">
-        <g transform="rotate(4 85 240)">
-          <rect x="22" y="2" width="106" height="22" rx="8" fill="#23252b"/>
-          <rect x="30" y="20" width="90" height="448" rx="3" fill="#15161a"/>
-          <rect x="36" y="30" width="78" height="96" rx="2" fill="#f6d5dc"/><rect x="36" y="134" width="78" height="96" rx="2" fill="#f4e3b8"/><rect x="36" y="238" width="78" height="96" rx="2" fill="#cfdff0"/><rect x="36" y="342" width="78" height="96" rx="2" fill="#d3e6d7"/>
-          <g fill="#f2b48f"><circle cx="62" cy="82" r="19"/><circle cx="62" cy="186" r="19"/><circle cx="62" cy="290" r="19"/><circle cx="62" cy="394" r="19"/></g>
-          <g fill="#e3957c"><circle cx="88" cy="78" r="18"/><circle cx="88" cy="182" r="18"/><circle cx="88" cy="286" r="18"/><circle cx="88" cy="390" r="18"/></g>
-          <g fill="#15161a"><circle cx="56" cy="79" r="2"/><circle cx="68" cy="79" r="2"/><circle cx="83" cy="75" r="2"/><circle cx="94" cy="75" r="2"/><circle cx="56" cy="183" r="2"/><circle cx="68" cy="183" r="2"/><circle cx="83" cy="179" r="2"/><circle cx="94" cy="179" r="2"/><circle cx="56" cy="287" r="2"/><circle cx="68" cy="287" r="2"/><circle cx="83" cy="283" r="2"/><circle cx="94" cy="283" r="2"/><circle cx="56" cy="391" r="2"/><circle cx="68" cy="391" r="2"/><circle cx="83" cy="387" r="2"/><circle cx="94" cy="387" r="2"/></g>
-          <g stroke="#15161a" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M55 90q7 6 14 0M81 85q7 6 14 0M55 194q7 6 14 0M81 189q7 6 14 0M55 298q7 6 14 0M81 293q7 6 14 0M55 402q7 6 14 0M81 397q7 6 14 0"/></g>
-          <path d="M75 140c-5-7-14 0-7 7l7 7 7-7c7-7-2-14-7-7z" fill="#e5386d"/>
-          <text x="75" y="462" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="7" fill="#9aa0a8">frameus</text>
-        </g>
-      </svg>
-    </section>
-
-    <!-- PILIH BOOTH -->
-    <section data-screen="booth" class="screen center" hidden>
-      <h2 class="title">Pilih booth</h2>
-      <p class="sub">Tiap booth punya tampilan sendiri. Pasanganmu otomatis ikut.</p>
-      <div id="booths" class="booths" role="radiogroup" aria-label="Gaya booth"></div>
-      <button id="btnBoothBack" class="link-btn" type="button">← Kembali</button>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 440 520" role="img">
+          <defs>
+            <pattern id="dotsR" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="4.5" cy="4.5" r="3.4" fill="#ff4b3e"/></pattern>
+            <pattern id="dotsB" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><circle cx="4.5" cy="4.5" r="3.4" fill="#2536d6"/></pattern>
+            <clipPath id="fr"><rect x="40" y="40" width="360" height="440"/></clipPath>
+          </defs>
+          <rect x="40" y="40" width="360" height="440" fill="#f6f1e6" stroke="#14120f" stroke-width="3"/>
+          <g clip-path="url(#fr)" style="mix-blend-mode:multiply">
+            <circle cx="170" cy="250" r="150" fill="url(#dotsR)"/>
+            <circle cx="170" cy="250" r="150" fill="#ff4b3e" opacity=".28"/>
+            <circle cx="270" cy="270" r="150" fill="url(#dotsB)" style="mix-blend-mode:multiply"/>
+            <circle cx="270" cy="270" r="150" fill="#2536d6" opacity=".26" style="mix-blend-mode:multiply"/>
+          </g>
+          <line x1="220" y1="40" x2="220" y2="480" stroke="#14120f" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
+          <g fill="none" stroke="#14120f" stroke-width="2"><path d="M12 40h18M21 31v18"/><path d="M410 40h18M419 31v18"/><path d="M12 480h18M21 471v18"/><path d="M410 480h18M419 471v18"/></g>
+          <text x="40" y="508" font-family="Space Mono, monospace" font-size="13" fill="#14120f">KAMU</text>
+          <text x="400" y="508" font-family="Space Mono, monospace" font-size="13" fill="#14120f" text-anchor="end">DIA</text>
+        </svg>
+      </div>
     </section>
 
     <!-- ROOM -->
-    <section data-screen="room" class="screen center" hidden>
-      <h2 class="title">Kirim kode ini ke pasanganmu</h2>
-      <p class="sub">Mereka bisa mengetiknya, atau membuka link-mu.</p>
+    <section data-screen="room" class="screen room" hidden>
+      <p class="kicker">room kalian</p>
+      <h2 class="title">Kirim kode ini ke dia</h2>
       <div class="stub">
         <div id="roomCode" class="code" aria-live="polite" aria-label="Kode room"></div>
         <div class="stub-actions">
           <button id="btnCopy" class="btn" type="button">Salin link</button>
-          <button id="btnShare" class="btn" type="button">Bagikan ↗</button>
+          <button id="btnShare" class="btn" type="button">Bagikan</button>
         </div>
-        <p id="roomStatus" class="presence" data-state="wait" role="status"><i class="dot"></i><span>Menunggu pasanganmu…</span></p>
+      </div>
+      <div id="roomStatus" class="presence" data-state="wait" role="status">
+        <span class="pres-dots" aria-hidden="true"><i class="me"></i><i class="peer"></i></span>
+        <span class="pres-text">Menunggu dia masuk…</span>
       </div>
       <div class="room-links">
-        <button id="btnRoomSolo" class="link-btn" type="button">Foto sendiri saja</button>
-        <button id="btnLeave" class="link-btn" type="button">Keluar</button>
+        <button id="btnRoomSolo" class="text-link" type="button">foto sendiri dulu</button>
+        <button id="btnLeave" class="text-link" type="button">keluar</button>
       </div>
     </section>
 
