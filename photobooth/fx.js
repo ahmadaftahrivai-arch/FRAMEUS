@@ -126,41 +126,43 @@ function loveParticles(x, idx, top, at, a, fw, t) {
 
 // Lens Snapchat "kacamata + kumis": kacamata tebal berlensa pantulan, kumis berbulu dengan kawat tipis melengkung.
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-const lensPath = (x, m) => {                       // m = +1 kanan, -1 kiri (satuan: jarak antar sudut mata)
+const lensPath = (x, m) => {                       // persegi membulat, sedikit lebih lebar di atas (m = +1 kanan, -1 kiri)
+  const xi = .08, xo = .72, yt = -.2, yto = -.23, yb = .4;
   x.beginPath();
-  x.moveTo(m * .07, -.17);
-  x.bezierCurveTo(m * .3, -.2, m * .5, -.21, m * .7, -.23);          // sisi atas, hampir lurus, sudut luar sedikit naik
-  x.bezierCurveTo(m * .77, -.08, m * .74, .12, m * .63, .27);         // sisi luar
-  x.bezierCurveTo(m * .5, .46, m * .22, .48, m * .1, .3);             // bawah membulat
-  x.bezierCurveTo(m * .07, .18, m * .06, .0, m * .07, -.17);            // sisi dalam
+  x.moveTo(m * (xi + .05), yt);
+  x.lineTo(m * (xo - .05), yto);
+  x.quadraticCurveTo(m * xo, yto, m * xo, yto + .06);
+  x.lineTo(m * (xo - .02), yb - .2);
+  x.bezierCurveTo(m * (xo - .02), yb - .02, m * (xo - .1), yb, m * (xo - .24), yb);
+  x.lineTo(m * (xi + .2), yb);
+  x.bezierCurveTo(m * (xi + .06), yb, m * xi, yb - .06, m * xi, yb - .2);
+  x.lineTo(m * xi, yt + .05);
+  x.quadraticCurveTo(m * xi, yt, m * (xi + .05), yt);
   x.closePath();
 };
 function drawGlasses(x, E, u, rot) {
   x.save(); x.translate(E.x, E.y); x.rotate(rot); x.scale(u, u);
   for (const m of [1, -1]) {
     x.save(); lensPath(x, m); x.clip();
-    const g = x.createLinearGradient(0, -.3, 0, .46);               // lensa ungu-kebiruan, transparan (mata tetap terlihat)
-    g.addColorStop(0, "rgba(120,118,205,.62)"); g.addColorStop(1, "rgba(140,128,185,.55)");
+    const g = x.createLinearGradient(0, -.3, 0, .42);               // lensa ungu-kebiruan yang tembus pandang (mata tetap terlihat)
+    g.addColorStop(0, "rgba(125,122,215,.52)"); g.addColorStop(1, "rgba(150,135,195,.40)");
     x.fillStyle = g; x.fillRect(-1, -.4, 2, 1);
-    x.fillStyle = "rgba(112,88,74,.62)";                               // pantulan bangunan di bagian bawah
-    x.beginPath(); x.moveTo(m * .06, .5); x.lineTo(m * .06, .06); x.lineTo(m * .17, .1); x.lineTo(m * .24, .24);
-    x.lineTo(m * .31, .21); x.lineTo(m * .38, .34); x.lineTo(m * .5, .3); x.lineTo(m * .62, .5); x.closePath(); x.fill();
-    x.strokeStyle = "rgba(210,190,170,.35)"; x.lineWidth = .008;
-    for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(m * (.1 + i * .02), .12 + i * .07); x.lineTo(m * (.28 + i * .02), .2 + i * .07); x.stroke(); }
-    x.strokeStyle = "rgba(255,255,255,.14)"; x.lineWidth = .02;        // kilau
-    x.beginPath(); x.moveTo(m * .5, -.2); x.lineTo(m * .3, .12); x.stroke();
+    x.fillStyle = "rgba(112,88,74,.58)";                                // pantulan bangunan di bagian bawah
+    x.beginPath(); x.moveTo(m * .06, .5); x.lineTo(m * .06, .1); x.lineTo(m * .17, .13); x.lineTo(m * .24, .26);
+    x.lineTo(m * .31, .23); x.lineTo(m * .38, .35); x.lineTo(m * .5, .31); x.lineTo(m * .62, .5); x.closePath(); x.fill();
+    x.strokeStyle = "rgba(210,190,170,.28)"; x.lineWidth = .008;
+    for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(m * (.1 + i * .02), .16 + i * .07); x.lineTo(m * (.28 + i * .02), .24 + i * .07); x.stroke(); }
+    x.strokeStyle = "rgba(255,255,255,.07)"; x.lineWidth = .05;        // kilau lembut
+    x.beginPath(); x.moveTo(m * .52, -.2); x.lineTo(m * .32, .14); x.stroke();
     x.restore();
-    x.strokeStyle = "#2a201c"; x.lineJoin = "round";                   // bingkai tebal doff
-    lensPath(x, m); x.lineWidth = .06; x.stroke();
-    x.beginPath(); x.moveTo(m * .08, -.19); x.bezierCurveTo(m * .3, -.22, m * .5, -.23, m * .72, -.26); x.lineWidth = .085; x.stroke();   // rim atas sedikit lebih tebal
-    x.beginPath(); x.moveTo(m * .74, -.24); x.lineTo(m * .88, -.2); x.lineWidth = .065; x.lineCap = "round"; x.stroke();            // gagang (pendek)
-    x.strokeStyle = "rgba(255,255,255,.1)"; x.lineWidth = .012;
-    x.beginPath(); x.moveTo(m * .12, -.22); x.bezierCurveTo(m * .3, -.25, m * .5, -.26, m * .7, -.29); x.stroke();
+    x.strokeStyle = "#2a201c"; x.lineJoin = "round"; x.lineCap = "round";   // bingkai tebal doff yang menyambung
+    lensPath(x, m); x.lineWidth = .085; x.stroke();
+    x.beginPath(); x.moveTo(m * .08, -.215); x.lineTo(m * .72, -.245); x.lineWidth = .06; x.stroke();      // rim atas sedikit lebih tebal (menyatu dengan bingkai)
+    x.beginPath(); x.moveTo(m * .74, -.22); x.lineTo(m * .86, -.2); x.lineWidth = .07; x.stroke();         // gagang pendek
   }
-  x.fillStyle = "#2a201c"; x.fillRect(-.1, -.2, .2, .1);               // jembatan
+  x.fillStyle = "#2a201c"; x.fillRect(-.1, -.24, .2, .09);             // jembatan
   x.restore();
 }
-// Kurva separuh kanan (dari tengah-atas, lewat ujung, kembali ke tengah-bawah): [x0,y0, c1x,c1y, c2x,c2y, x1,y1]
 const STACHE_R = [[0, -.1, .2, -.2, .5, -.2, .76, -.12], [.76, -.12, .95, -.07, 1.1, -.09, 1.28, -.06],
                   [1.28, -.06, 1.15, .02, 1.05, .1, .86, .14], [.86, .14, .62, .2, .3, .24, 0, .17]];
 const stacheStrokes = (() => {                      // helai rambut statis (tidak berkedip tiap frame)
