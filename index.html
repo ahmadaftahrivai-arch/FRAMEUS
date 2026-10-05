@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nama Kamu — Portofolio Magang</title>
+  <meta name="description" content="Portofolio mahasiswa yang mencari kesempatan magang.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="nav">
+    <a href="#home" class="logo">NK.</a>
+    <nav>
+      <a href="#tentang">Tentang</a>
+      <a href="#skill">Skill</a>
+      <a href="#proyek">Proyek</a>
+      <a href="#pengalaman">Pengalaman</a>
+      <a href="#kontak">Kontak</a>
+    </nav>
+    <button id="theme" aria-label="Ganti tema">◐</button>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <p class="eyebrow">Halo, saya</p>
+      <h1>Nama Kamu</h1>
+      <p class="lead">Mahasiswa Semester 6 Teknik Informatika yang mencari <strong>magang</strong> di bidang Web Development.</p>
+      <div class="cta">
+        <a class="btn" href="#proyek">Lihat Proyek</a>
+        <a class="btn ghost" href="cv.pdf" download>Unduh CV</a>
+      </div>
+    </section>
+
+    <section id="tentang">
+      <h2>Tentang Saya</h2>
+      <p>Saya mahasiswa di Universitas Contoh dengan IPK 3.80. Saya suka membangun produk web yang rapi dan berguna, dan terbiasa belajar mandiri serta bekerja dalam tim. Saat ini saya mencari magang selama 3–6 bulan untuk menambah pengalaman nyata di industri.</p>
+    </section>
+
+    <section id="skill">
+      <h2>Skill</h2>
+      <ul class="chips">
+        <li>HTML &amp; CSS</li><li>JavaScript</li><li>React</li><li>Node.js</li>
+        <li>Git &amp; GitHub</li><li>SQL</li><li>Figma</li><li>Komunikasi Tim</li>
+      </ul>
+    </section>
+
+    <section id="proyek">
+      <h2>Proyek</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Aplikasi Catatan Keuangan</h3>
+          <p>Web app untuk mencatat pemasukan dan pengeluaran dengan grafik bulanan.</p>
+          <p class="tags">React · Chart.js</p>
+          <a href="#" target="_blank" rel="noopener">Demo</a> · <a href="#" target="_blank" rel="noopener">Kode</a>
+        </article>
+        <article class="card">
+          <h3>Website UMKM Kopi Lokal</h3>
+          <p>Landing page responsif dengan katalog produk dan pemesanan via WhatsApp.</p>
+          <p class="tags">HTML · CSS · JavaScript</p>
+          <a href="#" target="_blank" rel="noopener">Demo</a> · <a href="#" target="_blank" rel="noopener">Kode</a>
+        </article>
+        <article class="card">
+          <h3>REST API Perpustakaan</h3>
+          <p>API manajemen buku dan peminjaman dengan autentikasi JWT.</p>
+          <p class="tags">Node.js · Express · PostgreSQL</p>
+          <a href="#" target="_blank" rel="noopener">Dokumentasi</a> · <a href="#" target="_blank" rel="noopener">Kode</a>
+        </article>
+      </div>
+    </section>
+
+    <section id="pengalaman">
+      <h2>Pengalaman &amp; Pendidikan</h2>
+      <ol class="timeline">
+        <li><span>2024 – sekarang</span><strong>Anggota Divisi Web, Himpunan Mahasiswa</strong><p>Mengembangkan dan merawat website himpunan.</p></li>
+        <li><span>2023</span><strong>Asisten Praktikum Pemrograman Web</strong><p>Membimbing 30+ mahasiswa dalam praktikum.</p></li>
+        <li><span>2022 – sekarang</span><strong>S1 Teknik Informatika, Universitas Contoh</strong><p>IPK 3.80/4.00.</p></li>
+      </ol>
+    </section>
+
+    <section id="kontak">
+      <h2>Kontak</h2>
+      <p>Terbuka untuk kesempatan magang. Hubungi saya:</p>
+      <ul class="links">
+        <li><a href="mailto:email@contoh.com">email@contoh.com</a></li>
+        <li><a href="https://linkedin.com/in/username" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://github.com/username" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>© <span id="year"></span> Nama Kamu</footer>
+  <script src="script.js"></script>
+</body>
+</html>
