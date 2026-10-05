@@ -70,16 +70,16 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   const st = loveState[idx] || (loveState[idx] = { cloud: [], hair: [], last: 0, ac: 0, ah: 0 });
   const dt = st.last ? Math.min(.1, (t - st.last) / 1000) : 0;
   st.last = t;
-  st.ac += dt * 3.2; st.ah += dt * 2.6;
+  st.ac += dt * 9; st.ah += dt * 5.5;
   const R = Math.random;
   while (st.ac >= 1) {                                   // awan hati besar & pucat
     st.ac -= 1;
     const ang = R() * Math.PI * 2, rr = Math.sqrt(R());
     st.cloud.push({
       u: Math.cos(ang) * rr * 1.0, v: .3 + Math.sin(ang) * rr * .42,
-      size: .24 + R() * .2, peak: .3 + R() * .35,
-      rot: (R() - .5) * .7, spin: (R() - .5) * .25,
-      vx: (R() - .5) * .08, vy: .05 + R() * .07, ph: R() * 6, age: 0, life: 2.2 + R() * 1.6,
+      size: .22 + R() * .2, peak: .35 + R() * .35,
+      rot: (R() - .5) * .7, spin: (R() - .5) * .6,
+      vx: (R() - .5) * .2, vy: .1 + R() * .15, ph: R() * 6, age: 0, life: .9 + R() * .8,
     });
   }
   while (st.ah >= 1) {                                   // hati kecil pekat di garis rambut
@@ -88,7 +88,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
     st.hair.push({
       u: Math.cos(th) * .5, v: -.36 + Math.sin(th) * .58 + (R() - .5) * .08,
       size: .07 + R() * .08, rot: (R() - .5) * .9, spin: (R() - .5) * .5,
-      vx: Math.cos(th) * .03, vy: .02 + R() * .04, age: 0, life: 1.0 + R() * 1.0,
+      vx: Math.cos(th) * (.25 + R() * .25), vy: .15 + R() * .3, age: 0, life: .5 + R() * .6,
     });
   }
   st.cloud = st.cloud.filter((p) => (p.age += dt) < p.life);
@@ -96,7 +96,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   for (const p of st.cloud) {
     const u = p.age / p.life, env = Math.sin(Math.PI * u) ** .8;
     const c = at(top, p.u + p.vx * p.age + Math.sin(t / 900 + p.ph) * .015, p.v + p.vy * p.age);
-    const w = p.size * fw;
+    const w = p.size * fw * (1 + .08 * Math.sin(t / 110 + p.ph));
     heart(x, c.x, c.y, w, a + p.rot + p.spin * p.age, p.peak * env, "#ff4d80", w * .1);
   }
   for (const p of st.hair) {
