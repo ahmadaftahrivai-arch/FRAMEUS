@@ -69,9 +69,9 @@ function halftone(x, w, h, color, angle, step, k, rMax) {
   }
   x.restore();
 }
-const RED = "#ee3b2f", BLUE = "#2536d6";
+const RED = "#dd6a57", BLUE = "#4d5dbb";
 const riso2 = (x, w, h) => {
-  x.fillStyle = "#f3ede0"; x.fillRect(0, 0, w, h);
+  x.fillStyle = "#fbf8f2"; x.fillRect(0, 0, w, h);
   x.globalCompositeOperation = "multiply";
   halftone(x, w, h, RED, 15, 10, (u, v) => 1.05 - u * 1.25 + (v - .5) * .15, 4.4);
   halftone(x, w, h, BLUE, 75, 10, (u, v) => u * 1.25 - .1 - (v - .5) * .15, 4.4);
@@ -165,8 +165,8 @@ const FRAMES = [
   { id: "tart",   cat: "Pola",     name: "Tartan",   bg: tartan("#f6e7e0", "#e9858a", "#5e86c9") },
   { id: "diag",   cat: "Pola",     name: "Diagonal", bg: diagonal("#e4f1e6", "#b4d8bb", 26) },
   { id: "riso2",  cat: "Riso",     name: "Dua tinta", bg: riso2 },
-  { id: "risoR",  cat: "Riso",     name: "Tinta merah", bg: risoOne("#f4eadc", RED, 15) },
-  { id: "risoB",  cat: "Riso",     name: "Tinta biru", bg: risoOne("#f4eadc", BLUE, 75) },
+  { id: "risoR",  cat: "Riso",     name: "Tinta merah", bg: risoOne("#fbf8f2", RED, 15) },
+  { id: "risoB",  cat: "Riso",     name: "Tinta biru", bg: risoOne("#fbf8f2", BLUE, 75) },
   { id: "mis",    cat: "Riso",     name: "Meleset",  bg: misreg },
   { id: "heart",  cat: "Pesta",    name: "Hati",     bg: hearts("#ffe0e8", "#f48aa5") },
   { id: "star",   cat: "Pesta",    name: "Bintang",  bg: stars("#1f2552", "#ffd45c"), dark: true },
@@ -314,8 +314,8 @@ function onMsg(m) {
 const sendPick = () => send({ t: "pick", layout: S.touched.layout ? S.layout : null, frame: S.touched.frame ? S.frame : null });
 function setColors() {            // host = pink, tamu = biru; "me" selalu warnamu sendiri
   const root = document.documentElement.style;
-  root.setProperty("--me", S.isHost ? "#ff4b3e" : "#2536d6");
-  root.setProperty("--peer", S.isHost ? "#2536d6" : "#ff4b3e");
+  root.setProperty("--me", S.isHost ? "#cf5b48" : "#4453b0");
+  root.setProperty("--peer", S.isHost ? "#4453b0" : "#cf5b48");
 }
 const peerError = (e) => ({
   "peer-unavailable": "Kode room tidak ditemukan. Cek lagi kodenya.",
@@ -485,9 +485,9 @@ function render(canvas, { frame, shots, scale = 1, caption = "", date = false })
     x.fillRect(PAD, H - footer + 8, W - PAD * 2, footer - 8 - PAD * .45);
     x.fillStyle = frame.dark ? "#f5f5f5" : "#2a2420";
     x.textAlign = "center";
-    x.font = "800 30px 'Bricolage Grotesque', system-ui, sans-serif";
+    x.font = "800 30px 'Plus Jakarta Sans', system-ui, sans-serif";
     x.fillText(caption, W / 2, H - footer / 2 - (date ? 0 : -10));
-    if (date) { x.font = "400 15px 'Space Mono', ui-monospace, monospace"; x.fillText(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), W / 2, H - footer / 2 + 26); }
+    if (date) { x.font = "500 15px 'Plus Jakarta Sans', system-ui, sans-serif"; x.fillText(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), W / 2, H - footer / 2 + 26); }
   }
 }
 

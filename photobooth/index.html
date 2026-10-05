@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#efe9dd">
+  <meta name="theme-color" content="#ffffff">
   <title>frameus — dua kota, satu frame</title>
   <meta name="description" content="Foto berdua walau beda kota. Kamera kalian tampil berdampingan dan hasilnya jadi satu strip foto.">
   <link rel="stylesheet" href="style.css">
@@ -54,23 +54,19 @@
       </div>
 
       <div class="hero-art" aria-hidden="true">
-        <svg viewBox="0 0 440 520" role="img">
-          <defs>
-            <pattern id="dotsR" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(15)"><circle cx="4.5" cy="4.5" r="3.4" fill="#ff4b3e"/></pattern>
-            <pattern id="dotsB" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(75)"><circle cx="4.5" cy="4.5" r="3.4" fill="#2536d6"/></pattern>
-            <clipPath id="fr"><rect x="40" y="40" width="360" height="440"/></clipPath>
-          </defs>
-          <rect x="40" y="40" width="360" height="440" fill="#f6f1e6" stroke="#14120f" stroke-width="3"/>
-          <g clip-path="url(#fr)" style="mix-blend-mode:multiply">
-            <circle cx="170" cy="250" r="150" fill="url(#dotsR)"/>
-            <circle cx="170" cy="250" r="150" fill="#ff4b3e" opacity=".28"/>
-            <circle cx="270" cy="270" r="150" fill="url(#dotsB)" style="mix-blend-mode:multiply"/>
-            <circle cx="270" cy="270" r="150" fill="#2536d6" opacity=".26" style="mix-blend-mode:multiply"/>
+        <svg viewBox="0 0 220 440" role="img">
+          <defs><filter id="sh" x="-40%" y="-20%" width="180%" height="150%"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#131318" flood-opacity=".16"/></filter></defs>
+          <g transform="rotate(5 110 220)" filter="url(#sh)">
+            <rect x="30" y="16" width="160" height="408" rx="14" fill="#ffffff" stroke="#e8e8ec"/>
+            <rect x="44" y="30" width="132" height="88" rx="8" fill="#fde8ef"/>
+            <rect x="44" y="128" width="132" height="88" rx="8" fill="#ece8fd"/>
+            <rect x="44" y="226" width="132" height="88" rx="8" fill="#fff0e4"/>
+            <rect x="44" y="324" width="132" height="88" rx="8" fill="#e5effd"/>
+            <g fill="#e8467c"><circle cx="90" cy="74" r="19" opacity=".9"/></g><g fill="#5b7cfa"><circle cx="124" cy="74" r="19" opacity=".85"/></g>
+            <g fill="#e8467c"><circle cx="90" cy="172" r="19" opacity=".9"/></g><g fill="#5b7cfa"><circle cx="124" cy="172" r="19" opacity=".85"/></g>
+            <g fill="#e8467c"><circle cx="90" cy="270" r="19" opacity=".9"/></g><g fill="#5b7cfa"><circle cx="124" cy="270" r="19" opacity=".85"/></g>
+            <g fill="#e8467c"><circle cx="90" cy="368" r="19" opacity=".9"/></g><g fill="#5b7cfa"><circle cx="124" cy="368" r="19" opacity=".85"/></g>
           </g>
-          <line x1="220" y1="40" x2="220" y2="480" stroke="#14120f" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
-          <g fill="none" stroke="#14120f" stroke-width="2"><path d="M12 40h18M21 31v18"/><path d="M410 40h18M419 31v18"/><path d="M12 480h18M21 471v18"/><path d="M410 480h18M419 471v18"/></g>
-          <text x="40" y="508" font-family="Space Mono, monospace" font-size="13" fill="#14120f">KAMU</text>
-          <text x="400" y="508" font-family="Space Mono, monospace" font-size="13" fill="#14120f" text-anchor="end">DIA</text>
         </svg>
       </div>
     </section>
