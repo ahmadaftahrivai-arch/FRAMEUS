@@ -42,7 +42,7 @@ export const BGS = [
 export const FILTERS = [
   { id: "crown", icon: "👑" }, { id: "tophat", icon: "🎩" }, { id: "sunglasses", icon: "🕶️" },
   { id: "glasses", icon: "👓" }, { id: "bow", icon: "🎀" }, { id: "flowers", icon: "🌸" },
-  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "mustache", icon: "🥸" }, { id: "love", icon: "💞" },
+  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "mustache", icon: "🥸" }, { id: "chevron", icon: "👨" }, { id: "love", icon: "💞" },
 ];
 
 const emoji = (x, ch, cx, cy, size, rot = 0) => {
@@ -124,6 +124,31 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   }
 }
 
+// Kumis ala Snapchat: bentuk dibuat dari kurva separuh kanan lalu dicerminkan.
+const MUSTACHE = {
+  handlebar: [[0, -.1], [.25, -.26, .55, -.24, .78, -.12], [.93, -.05, 1.0, -.1, 1.06, -.27], [1.12, -.4, 1.26, -.34, 1.2, -.22],
+              [1.14, -.06, .98, .13, .72, .13], [.45, .13, .2, .15, 0, .09]],
+  chevron:   [[0, -.12], [.3, -.28, .7, -.25, .96, -.1], [1.02, -.02, 1.0, .14, .9, .22], [.7, .08, .35, .15, 0, .12]],
+};
+function drawMustache(x, kind, c, halfW, rot) {
+  const seg = MUSTACHE[kind];
+  x.save(); x.translate(c.x, c.y); x.rotate(rot); x.scale(halfW, halfW * 1.25);
+  const path = (m) => {
+    x.beginPath(); x.moveTo(0, seg[0][1]);
+    for (let i = 1; i < seg.length; i++) { const p = seg[i]; x.bezierCurveTo(m * p[0], p[1], m * p[2], p[3], m * p[4], p[5]); }
+    x.closePath();
+  };
+  const g = x.createLinearGradient(0, -.3, 0, .2);
+  g.addColorStop(0, "#2b1f18"); g.addColorStop(1, "#0d0807");
+  x.fillStyle = g;
+  path(1); x.fill(); path(-1); x.fill();
+  x.strokeStyle = "rgba(255,235,210,.14)"; x.lineWidth = .012; x.lineCap = "round";   // helai rambut tipis
+  for (const m of [1, -1]) for (let k = 0; k < 5; k++) {
+    x.beginPath(); x.moveTo(m * .04, -.02 + k * .02); x.quadraticCurveTo(m * .45, -.16 + k * .03, m * (.8 + k * .02), -.04 + k * .02); x.stroke();
+  }
+  x.restore();
+}
+
 function drawFilter(x, id, P, t, idx = 0) {
   const A = P(33), B = P(263), top = P(10), chin = P(152), L = P(234), R = P(454);
   const fw = Math.hypot(R.x - L.x, R.y - L.y);
@@ -159,11 +184,10 @@ function drawFilter(x, id, P, t, idx = 0) {
         x.fillStyle = g; x.beginPath(); x.arc(c.x, c.y, fw * .17, 0, 7); x.fill();
       }
       break;
-    case "mustache": {
-      const c = P(164);
-      x.save(); x.translate(c.x, c.y + fw * .01); x.rotate(a); x.fillStyle = "#3b2a20";
-      for (const s of [-1, 1]) { x.beginPath(); x.ellipse(s * fw * .1, 0, fw * .12, fw * .045, s * -.25, 0, 7); x.fill(); }
-      x.restore(); break;
+    case "mustache": case "chevron": {
+      const n0 = P(2), l0 = P(0), c = { x: n0.x + (l0.x - n0.x) * .42, y: n0.y + (l0.y - n0.y) * .42 };   // tepat di bawah hidung
+      drawMustache(x, id === "chevron" ? "chevron" : "handlebar", c, fw * (id === "chevron" ? .27 : .3), a);
+      break;
     }
     case "love": loveParticles(x, idx, top, at, a, fw, t); break;
   }
