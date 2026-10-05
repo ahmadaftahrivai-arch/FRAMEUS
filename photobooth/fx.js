@@ -259,7 +259,7 @@ export function bgCanvas(id) {
   return bgCache[id];
 }
 
-let seg = null, face = null, loading = null, lastTs = 0;
+let seg = null, face = null, loading = null, lastTs = 0, snap3d = null, snap3dTried = false;
 const temp = document.createElement("canvas"); temp.width = W; temp.height = H;
 const maskCv = document.createElement("canvas");
 
@@ -319,8 +319,13 @@ export function render(video, canvas, bgId, filterId) {
   if (!drawn) x.drawImage(video, ox, oy, vw * s, vh * s);
   if (filterId !== "none" && face) {
     const r = face.detectForVideo(video, tsNext());
+    if (filterId === "snapstache" && !snap3dTried) {        // model 3D dimuat saat pertama dipakai; sementara pakai versi 2D
+      snap3dTried = true;
+      import("./fx3d.js").then((m) => { snap3d = m; }).catch((e) => console.warn("3D gagal, pakai 2D", e));
+    }
     (r.faceLandmarks || []).forEach((lm, idx) => {
-      drawFilter(x, filterId, (i) => ({ x: lm[i].x * vw * s + ox, y: lm[i].y * vh * s + oy }), performance.now(), idx);
+      if (filterId === "snapstache" && snap3d) snap3d.drawFace(x, lm, { vw, vh, s, ox, oy }, idx);
+      else drawFilter(x, filterId, (i) => ({ x: lm[i].x * vw * s + ox, y: lm[i].y * vh * s + oy }), performance.now(), idx);
     });
   }
   x.restore();
