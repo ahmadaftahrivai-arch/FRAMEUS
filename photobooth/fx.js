@@ -51,55 +51,64 @@ const emoji = (x, ch, cx, cy, size, rot = 0) => {
   x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(ch, 0, 0); x.restore();
 };
 
-// Efek "love" ala Mac: hati pink gemuk muncul (pop) di garis kepala, melayang pelan ke luar-atas, lalu memudar.
-const HEART_COLORS = [["#f2509f", "#dc2f86"], ["#ef4aa4", "#d92e8c"], ["#f45ba6", "#e0388f"], ["#e8409a", "#d02a82"]];
-function heart(x, cx, cy, w, rot, alpha, ci) {
-  const [c1, c2] = HEART_COLORS[ci % HEART_COLORS.length];
+// Efek "love" ala Photo Booth Mac: awan hati besar-pucat-transparan (tepi lembut) di atas & sekitar kepala,
+// ditambah beberapa hati kecil pekat tepat di garis rambut. Tiap wajah punya partikel sendiri.
+function heart(x, cx, cy, w, rot, alpha, color, blur) {
   x.save(); x.translate(cx, cy); x.rotate(rot); x.scale(w / 1.8, w / 1.8); x.globalAlpha = alpha;
   x.beginPath(); x.moveTo(0, .55);
   x.bezierCurveTo(-.2, .38, -.92, .08, -.9, -.3);
   x.bezierCurveTo(-.88, -.78, -.26, -.86, 0, -.4);
   x.bezierCurveTo(.26, -.86, .88, -.78, .9, -.3);
   x.bezierCurveTo(.92, .08, .2, .38, 0, .55);
-  const g = x.createLinearGradient(-.7, -.8, .6, .6);
-  g.addColorStop(0, c1); g.addColorStop(1, c2);
-  x.fillStyle = g; x.fill();
+  x.fillStyle = color;
+  if (blur) { x.shadowColor = color; x.shadowBlur = blur; }
+  x.fill();
   x.restore();
 }
-const love = { parts: [], last: 0, acc: 0 };
-function loveParticles(x, top, at, a, fw, t) {
-  const dt = love.last ? Math.min(.1, (t - love.last) / 1000) : 0;
-  love.last = t;
-  love.acc += dt * 10;                                  // ~9 hati per detik
-  while (love.acc >= 1) {
-    love.acc -= 1;
-    const r = Math.random();
-    love.parts.push({
-      th: Math.PI * (.5 + (Math.random() + Math.random() - 1) * .52),        // posisi di busur kepala (kanan → kiri)
-      rad: (Math.random() - .5) * .12,                  // sebaran tegak lurus garis kepala
-      size: (r < .15 ? .07 + Math.random() * .04 : .16 + Math.random() * .18),
-      rot: (Math.random() - .5) * 1.0, spin: (Math.random() - .5) * .5,
-      drift: .08 + Math.random() * .14, age: 0, life: 1.4 + Math.random() * 1.0, ci: (Math.random() * 4) | 0,
+const loveState = [];
+function loveParticles(x, idx, top, at, a, fw, t) {
+  const st = loveState[idx] || (loveState[idx] = { cloud: [], hair: [], last: 0, ac: 0, ah: 0 });
+  const dt = st.last ? Math.min(.1, (t - st.last) / 1000) : 0;
+  st.last = t;
+  st.ac += dt * 3.2; st.ah += dt * 2.6;
+  const R = Math.random;
+  while (st.ac >= 1) {                                   // awan hati besar & pucat
+    st.ac -= 1;
+    const ang = R() * Math.PI * 2, rr = Math.sqrt(R());
+    st.cloud.push({
+      u: Math.cos(ang) * rr * 1.0, v: .3 + Math.sin(ang) * rr * .42,
+      size: .24 + R() * .2, peak: .3 + R() * .35,
+      rot: (R() - .5) * .7, spin: (R() - .5) * .25,
+      vx: (R() - .5) * .08, vy: .05 + R() * .07, ph: R() * 6, age: 0, life: 2.2 + R() * 1.6,
     });
   }
-  love.parts = love.parts.filter((p) => (p.age += dt) < p.life);
-  for (const p of love.parts) {
-    const u = p.age / p.life;
-    const pop = Math.min(1, u / .18);
-    const scale = .35 + .65 * (1 - (1 - pop) ** 3);     // membesar cepat di awal
-    const alpha = (u < .5 ? 1 : 1 - (u - .5) / .5) * .94;
-    // titik di kontur kepala (elips) + melayang ke luar sepanjang normal
-    const rx = .56, ry = .64, o = { u: 0, v: -.36 };
-    const dx = Math.cos(p.th), dy = Math.sin(p.th);
-    const nrm = Math.hypot(dx / rx, dy / ry) || 1;
-    const nx = dx / rx / nrm, ny = dy / ry / nrm;
-    const off = p.rad + p.drift * p.age;
-    const c = at(top, o.u + dx * rx + nx * off, o.v + dy * ry + ny * off + p.drift * .4 * p.age);
-    heart(x, c.x, c.y, p.size * fw * scale * 1.8 / 1.8, a + p.rot + p.spin * p.age, alpha, p.ci);
+  while (st.ah >= 1) {                                   // hati kecil pekat di garis rambut
+    st.ah -= 1;
+    const th = Math.PI * (.12 + .76 * R());
+    st.hair.push({
+      u: Math.cos(th) * .5, v: -.36 + Math.sin(th) * .58 + (R() - .5) * .08,
+      size: .07 + R() * .08, rot: (R() - .5) * .9, spin: (R() - .5) * .5,
+      vx: Math.cos(th) * .03, vy: .02 + R() * .04, age: 0, life: 1.0 + R() * 1.0,
+    });
+  }
+  st.cloud = st.cloud.filter((p) => (p.age += dt) < p.life);
+  st.hair = st.hair.filter((p) => (p.age += dt) < p.life);
+  for (const p of st.cloud) {
+    const u = p.age / p.life, env = Math.sin(Math.PI * u) ** .8;
+    const c = at(top, p.u + p.vx * p.age + Math.sin(t / 900 + p.ph) * .015, p.v + p.vy * p.age);
+    const w = p.size * fw;
+    heart(x, c.x, c.y, w, a + p.rot + p.spin * p.age, p.peak * env, "#ff4d80", w * .1);
+  }
+  for (const p of st.hair) {
+    const u = p.age / p.life, pop = Math.min(1, u / .2);
+    const scale = .3 + .7 * (1 - (1 - pop) ** 3);
+    const alpha = (u < .55 ? 1 : 1 - (u - .55) / .45) * .95;
+    const c = at(top, p.u + p.vx * p.age, p.v + p.vy * p.age);
+    heart(x, c.x, c.y, p.size * fw * scale, a + p.rot + p.spin * p.age, alpha, "#f0306e", 0);
   }
 }
 
-function drawFilter(x, id, P, t) {
+function drawFilter(x, id, P, t, idx = 0) {
   const A = P(33), B = P(263), top = P(10), L = P(234), R = P(454);
   const a = Math.atan2(B.y - A.y, B.x - A.x), d = { x: Math.cos(a), y: Math.sin(a) }, up = { x: d.y, y: -d.x };
   const fw = Math.hypot(R.x - L.x, R.y - L.y);
@@ -137,7 +146,7 @@ function drawFilter(x, id, P, t) {
       for (const s of [-1, 1]) { x.beginPath(); x.ellipse(s * fw * .1, 0, fw * .12, fw * .045, s * -.25, 0, 7); x.fill(); }
       x.restore(); break;
     }
-    case "love": loveParticles(x, top, at, a, fw, t); break;
+    case "love": loveParticles(x, idx, top, at, a, fw, t); break;
   }
 }
 
@@ -168,7 +177,7 @@ export function ensure(onState) {
       }),
       FaceLandmarker.createFromOptions(fs, {
         baseOptions: { modelAssetPath: "vendor/models/face_landmarker.task", delegate },
-        runningMode: "VIDEO", numFaces: 1,
+        runningMode: "VIDEO", numFaces: 2,
       }),
     ]);
     try { [seg, face] = await mk("GPU"); } catch (e) { [seg, face] = await mk("CPU"); }
@@ -212,8 +221,9 @@ export function render(video, canvas, bgId, filterId) {
   if (!drawn) x.drawImage(video, ox, oy, vw * s, vh * s);
   if (filterId !== "none" && face) {
     const r = face.detectForVideo(video, tsNext());
-    const lm = r.faceLandmarks && r.faceLandmarks[0];
-    if (lm) drawFilter(x, filterId, (i) => ({ x: lm[i].x * vw * s + ox, y: lm[i].y * vh * s + oy }), performance.now());
+    (r.faceLandmarks || []).forEach((lm, idx) => {
+      drawFilter(x, filterId, (i) => ({ x: lm[i].x * vw * s + ox, y: lm[i].y * vh * s + oy }), performance.now(), idx);
+    });
   }
   x.restore();
 }
