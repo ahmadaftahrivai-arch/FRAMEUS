@@ -7,41 +7,96 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <h1>LDR Photobooth 📸</h1>
-    <p class="sub">Foto berdua walau beda kota. Satu orang buat room, satunya join pakai kode.</p>
+  <header class="top">
+    <button id="btnBack" class="link" hidden>← Kembali</button>
+    <ol id="steps" class="steps" hidden>
+      <li data-s="frame">Frame</li><li data-s="shoot">Shoot</li><li data-s="pick">Pick</li><li data-s="style">Style</li><li data-s="done">Done</li>
+    </ol>
+  </header>
 
-    <section id="setup" class="panel">
-      <button id="btnStart" class="btn">Aktifkan Kamera</button>
-      <div id="connect" hidden>
-        <div class="row">
-          <button id="btnCreate" class="btn">Buat Room</button>
-          <span class="or">atau</span>
+  <main>
+    <!-- HOME -->
+    <section data-screen="home">
+      <span class="pill">for two</span>
+      <h1>Photobooth</h1>
+      <p class="sub">Satu photo strip, berdua di dalamnya, diambil dari dua tempat sekaligus.</p>
+      <div class="stack">
+        <button id="btnCreate" class="btn dark">Start a room <small>dengan pasangan</small></button>
+        <div class="join">
           <input id="joinCode" placeholder="Kode room" maxlength="6" autocapitalize="characters">
-          <button id="btnJoin" class="btn ghost">Join</button>
+          <button id="btnJoin" class="btn light">Join a room</button>
         </div>
-        <p id="status" class="status"></p>
+        <button id="btnSolo" class="btn pill-btn">📷 Just me</button>
       </div>
+      <p id="homeStatus" class="status"></p>
     </section>
 
-    <section id="stage" class="panel" hidden>
-      <div class="videos">
-        <div class="vbox"><video id="local" autoplay playsinline muted></video><span>Kamu</span></div>
-        <div class="vbox" id="remoteBox" hidden><video id="remote" autoplay playsinline></video><span>Pasangan</span></div>
+    <!-- ROOM -->
+    <section data-screen="room" hidden>
+      <h2>Room kamu</h2>
+      <div class="code" id="roomCode">-----</div>
+      <p class="sub">Kirim kode ini ke pasanganmu. Dia buka halaman ini → Join a room.</p>
+      <p id="roomStatus" class="status">Menunggu pasangan…</p>
+      <button id="btnRoomNext" class="btn dark">Lanjut</button>
+    </section>
+
+    <!-- LAYOUT -->
+    <section data-screen="layout" hidden>
+      <h2>Pick a size</h2>
+      <p class="sub">Tap one. Either of you can choose.</p>
+      <div id="layouts" class="cards"></div>
+      <button id="btnLayoutNext" class="btn dark">Next</button>
+    </section>
+
+    <!-- FRAME -->
+    <section data-screen="frame" hidden>
+      <h2>Pick a frame</h2>
+      <p class="sub">Your photos go in the white boxes.</p>
+      <div id="cats" class="chips"></div>
+      <div id="frames" class="cards frames"></div>
+      <button id="btnFrameNext" class="btn dark">Next</button>
+    </section>
+
+    <!-- SHOOT -->
+    <section data-screen="shoot" hidden>
+      <h2 id="shootTitle">Get ready</h2>
+      <p class="sub" id="shootSub">Pastikan wajah kelihatan, lalu mulai.</p>
+      <div class="cam">
+        <video id="local" autoplay playsinline muted></video>
+        <video id="remote" autoplay playsinline hidden></video>
         <div id="count" class="count" hidden></div>
       </div>
-      <div class="row">
-        <label>Warna frame <input type="color" id="frameColor" value="#ffd1dc"></label>
-        <input id="caption" placeholder="Teks bawah (opsional)" maxlength="30">
-      </div>
-      <button id="btnSnap" class="btn big">Mulai Foto (3x)</button>
+      <p class="try" id="tryText"></p>
+      <div id="thumbs" class="thumbs"></div>
+      <button id="btnShoot" class="btn dark">Mulai foto</button>
     </section>
 
-    <section id="result" class="panel" hidden>
-      <canvas id="strip"></canvas>
+    <!-- PICK -->
+    <section data-screen="pick" hidden>
+      <h2 id="pickTitle">Pick your shots</h2>
+      <p class="sub" id="pickSub"></p>
+      <div id="pickGrid" class="pickgrid"></div>
+      <button id="btnPickNext" class="btn dark" disabled>Next</button>
+    </section>
+
+    <!-- STYLE -->
+    <section data-screen="style" hidden>
+      <h2>Style it</h2>
+      <canvas id="preview" class="out"></canvas>
       <div class="row">
-        <a id="btnDownload" class="btn" download="ldr-photobooth.png">Unduh</a>
-        <button id="btnAgain" class="btn ghost">Foto Lagi</button>
+        <input id="caption" placeholder="Teks bawah" maxlength="30" value="LDR Photobooth">
+        <label class="chk"><input type="checkbox" id="showDate" checked> Tanggal</label>
+      </div>
+      <button id="btnStyleNext" class="btn dark">Next</button>
+    </section>
+
+    <!-- DONE -->
+    <section data-screen="done" hidden>
+      <h2>Done! 🎉</h2>
+      <canvas id="final" class="out"></canvas>
+      <div class="row">
+        <a id="btnDownload" class="btn dark" download="ldr-photobooth.png">Unduh</a>
+        <button id="btnAgain" class="btn light">Foto lagi</button>
       </div>
     </section>
   </main>
