@@ -198,6 +198,22 @@ const frameDef = () => FRAMES.find((f) => f.id === S.frame);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const send = (m) => { if (S.conn && S.conn.open) S.conn.send(m); };
 
+/* ---------- Tema tampilan ---------- */
+const THEMES = [{ id: "poster", name: "Poster" }, { id: "struk", name: "Struk" }, { id: "kontak", name: "Kontak" }];
+function setTheme(id, save = true) {
+  const t = THEMES.find((x) => x.id === id) || THEMES[0];
+  document.body.dataset.theme = t.id;
+  $("themeName").textContent = t.name;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = { poster: "#f4f3ef", struk: "#dcdcd8", kontak: "#0d0d0e" }[t.id];
+  if (save) { try { localStorage.setItem("frameus.theme", t.id); } catch (e) {} }
+}
+$("btnTheme").onclick = () => {
+  const i = THEMES.findIndex((x) => x.id === document.body.dataset.theme);
+  setTheme(THEMES[(i + 1) % THEMES.length].id);
+};
+{ let saved = null; try { saved = localStorage.getItem("frameus.theme"); } catch (e) {} setTheme(saved || "poster", false); }
+
 /* ---------- Navigasi ---------- */
 const STEP_OF = { layout: "frame", frame: "frame", shoot: "shoot", pick: "pick", style: "style", done: "done" };
 const STEP_NAME = ["Bentuk & frame", "Foto", "Pilih", "Sentuhan akhir", "Selesai"];
@@ -205,6 +221,7 @@ const BACK_TO = { room: "home", layout: () => (S.peer ? "room" : "home"), frame:
 
 function go(name) {
   S.screen = name;
+  document.body.dataset.screen = name;
   document.querySelectorAll("[data-screen]").forEach((sec) => (sec.hidden = sec.dataset.screen !== name));
   const cur = STEP_OF[name];
   const idx = ["frame", "shoot", "pick", "style", "done"].indexOf(cur);
@@ -485,9 +502,9 @@ function render(canvas, { frame, shots, scale = 1, caption = "", date = false })
     x.fillRect(PAD, H - footer + 8, W - PAD * 2, footer - 8 - PAD * .45);
     x.fillStyle = frame.dark ? "#f5f5f5" : "#2a2420";
     x.textAlign = "center";
-    x.font = "800 30px 'Plus Jakarta Sans', system-ui, sans-serif";
+    x.font = "900 30px 'Inter Tight', system-ui, sans-serif";
     x.fillText(caption, W / 2, H - footer / 2 - (date ? 0 : -10));
-    if (date) { x.font = "500 15px 'Plus Jakarta Sans', system-ui, sans-serif"; x.fillText(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), W / 2, H - footer / 2 + 26); }
+    if (date) { x.font = "500 14px 'IBM Plex Mono', ui-monospace, monospace"; x.fillText(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), W / 2, H - footer / 2 + 26); }
   }
 }
 
