@@ -42,7 +42,7 @@ export const BGS = [
 export const FILTERS = [
   { id: "crown", icon: "👑" }, { id: "tophat", icon: "🎩" }, { id: "sunglasses", icon: "🕶️" },
   { id: "glasses", icon: "👓" }, { id: "bow", icon: "🎀" }, { id: "flowers", icon: "🌸" },
-  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "mustache", icon: "🥸" }, { id: "chevron", icon: "👨" }, { id: "love", icon: "💞" },
+  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "snapstache", icon: "🥸" }, { id: "love", icon: "💞" },
 ];
 
 const emoji = (x, ch, cx, cy, size, rot = 0) => {
@@ -124,27 +124,79 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   }
 }
 
-// Kumis ala Snapchat: bentuk dibuat dari kurva separuh kanan lalu dicerminkan.
-const MUSTACHE = {
-  handlebar: [[0, -.1], [.25, -.26, .55, -.24, .78, -.12], [.93, -.05, 1.0, -.1, 1.06, -.27], [1.12, -.4, 1.26, -.34, 1.2, -.22],
-              [1.14, -.06, .98, .13, .72, .13], [.45, .13, .2, .15, 0, .09]],
-  chevron:   [[0, -.12], [.3, -.28, .7, -.25, .96, -.1], [1.02, -.02, 1.0, .14, .9, .22], [.7, .08, .35, .15, 0, .12]],
+// Lens Snapchat "kacamata + kumis": kacamata tebal berlensa pantulan, kumis berbulu dengan kawat tipis melengkung.
+const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+const lensPath = (x, m) => {                       // m = +1 kanan, -1 kiri (satuan: jarak antar sudut mata)
+  x.beginPath();
+  x.moveTo(m * .07, -.17);
+  x.bezierCurveTo(m * .3, -.2, m * .5, -.21, m * .7, -.23);          // sisi atas, hampir lurus, sudut luar sedikit naik
+  x.bezierCurveTo(m * .77, -.08, m * .74, .12, m * .63, .27);         // sisi luar
+  x.bezierCurveTo(m * .5, .46, m * .22, .48, m * .1, .3);             // bawah membulat
+  x.bezierCurveTo(m * .07, .18, m * .06, .0, m * .07, -.17);            // sisi dalam
+  x.closePath();
 };
-function drawMustache(x, kind, c, halfW, rot) {
-  const seg = MUSTACHE[kind];
-  x.save(); x.translate(c.x, c.y); x.rotate(rot); x.scale(halfW, halfW * 1.25);
-  const path = (m) => {
-    x.beginPath(); x.moveTo(0, seg[0][1]);
-    for (let i = 1; i < seg.length; i++) { const p = seg[i]; x.bezierCurveTo(m * p[0], p[1], m * p[2], p[3], m * p[4], p[5]); }
+function drawGlasses(x, E, u, rot) {
+  x.save(); x.translate(E.x, E.y); x.rotate(rot); x.scale(u, u);
+  for (const m of [1, -1]) {
+    x.save(); lensPath(x, m); x.clip();
+    const g = x.createLinearGradient(0, -.3, 0, .46);               // lensa ungu-kebiruan, transparan (mata tetap terlihat)
+    g.addColorStop(0, "rgba(120,118,205,.62)"); g.addColorStop(1, "rgba(140,128,185,.55)");
+    x.fillStyle = g; x.fillRect(-1, -.4, 2, 1);
+    x.fillStyle = "rgba(112,88,74,.62)";                               // pantulan bangunan di bagian bawah
+    x.beginPath(); x.moveTo(m * .06, .5); x.lineTo(m * .06, .06); x.lineTo(m * .17, .1); x.lineTo(m * .24, .24);
+    x.lineTo(m * .31, .21); x.lineTo(m * .38, .34); x.lineTo(m * .5, .3); x.lineTo(m * .62, .5); x.closePath(); x.fill();
+    x.strokeStyle = "rgba(210,190,170,.35)"; x.lineWidth = .008;
+    for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(m * (.1 + i * .02), .12 + i * .07); x.lineTo(m * (.28 + i * .02), .2 + i * .07); x.stroke(); }
+    x.strokeStyle = "rgba(255,255,255,.14)"; x.lineWidth = .02;        // kilau
+    x.beginPath(); x.moveTo(m * .5, -.2); x.lineTo(m * .3, .12); x.stroke();
+    x.restore();
+    x.strokeStyle = "#2a201c"; x.lineJoin = "round";                   // bingkai tebal doff
+    lensPath(x, m); x.lineWidth = .06; x.stroke();
+    x.beginPath(); x.moveTo(m * .08, -.19); x.bezierCurveTo(m * .3, -.22, m * .5, -.23, m * .72, -.26); x.lineWidth = .085; x.stroke();   // rim atas sedikit lebih tebal
+    x.beginPath(); x.moveTo(m * .74, -.24); x.lineTo(m * .88, -.2); x.lineWidth = .065; x.lineCap = "round"; x.stroke();            // gagang (pendek)
+    x.strokeStyle = "rgba(255,255,255,.1)"; x.lineWidth = .012;
+    x.beginPath(); x.moveTo(m * .12, -.22); x.bezierCurveTo(m * .3, -.25, m * .5, -.26, m * .7, -.29); x.stroke();
+  }
+  x.fillStyle = "#2a201c"; x.fillRect(-.1, -.2, .2, .1);               // jembatan
+  x.restore();
+}
+// Kurva separuh kanan (dari tengah-atas, lewat ujung, kembali ke tengah-bawah): [x0,y0, c1x,c1y, c2x,c2y, x1,y1]
+const STACHE_R = [[0, -.1, .2, -.2, .5, -.2, .76, -.12], [.76, -.12, .95, -.07, 1.1, -.09, 1.28, -.06],
+                  [1.28, -.06, 1.15, .02, 1.05, .1, .86, .14], [.86, .14, .62, .2, .3, .24, 0, .17]];
+const stacheStrokes = (() => {                      // helai rambut statis (tidak berkedip tiap frame)
+  const r = rng(77), out = [];
+  for (let i = 0; i < 160; i++) {
+    const m = i % 2 ? 1 : -1, px = r() * 1.15, py = -.18 + r() * .38, len = .08 + r() * .14;
+    out.push({ m, px, py, dx: len * (.7 + r() * .6), dy: len * (.1 + r() * .45) * (px > .6 ? -.3 : 1), light: r() < .45 });
+  }
+  return out;
+})();
+function drawStache(x, c, hw, rot) {
+  x.save(); x.translate(c.x, c.y); x.rotate(rot); x.scale(hw, hw * 1.15);
+  const body = () => {                                    // satu path utuh (tanpa sambungan di tengah)
+    x.beginPath(); x.moveTo(0, STACHE_R[0][1]);
+    for (const q of STACHE_R) x.bezierCurveTo(q[2], q[3], q[4], q[5], q[6], q[7]);
+    for (let i = STACHE_R.length - 1; i >= 0; i--) { const q = STACHE_R[i]; x.bezierCurveTo(-q[4], q[5], -q[2], q[3], -q[0], q[1]); }
     x.closePath();
   };
-  const g = x.createLinearGradient(0, -.3, 0, .2);
-  g.addColorStop(0, "#2b1f18"); g.addColorStop(1, "#0d0807");
-  x.fillStyle = g;
-  path(1); x.fill(); path(-1); x.fill();
-  x.strokeStyle = "rgba(255,235,210,.14)"; x.lineWidth = .012; x.lineCap = "round";   // helai rambut tipis
-  for (const m of [1, -1]) for (let k = 0; k < 5; k++) {
-    x.beginPath(); x.moveTo(m * .04, -.02 + k * .02); x.quadraticCurveTo(m * .45, -.16 + k * .03, m * (.8 + k * .02), -.04 + k * .02); x.stroke();
+  const g = x.createLinearGradient(0, -.2, 0, .24);
+  g.addColorStop(0, "#5a3d2b"); g.addColorStop(.6, "#3e2a1d"); g.addColorStop(1, "#24160f");
+  x.fillStyle = g; body(); x.fill();
+  {                                                                       // tekstur bulu
+    x.save(); body(); x.clip(); x.lineCap = "round"; x.lineWidth = .012;
+    for (const s of stacheStrokes) {
+      const m = s.m;
+      x.strokeStyle = s.light ? "rgba(170,125,90,.38)" : "rgba(15,8,4,.5)";
+      x.beginPath(); x.moveTo(m * s.px, s.py); x.quadraticCurveTo(m * (s.px + s.dx * .5), s.py + s.dy * .3, m * (s.px + s.dx), s.py + s.dy); x.stroke();
+    }
+    x.restore();
+  }
+  x.strokeStyle = "#140c08"; x.lineWidth = .02; x.lineCap = "round";     // kawat tipis melengkung di ujung
+  for (const m of [1, -1]) {
+    x.beginPath(); x.moveTo(m * 1.22, -.02);
+    x.bezierCurveTo(m * 1.38, .0, m * 1.5, -.15, m * 1.42, -.5);
+    x.bezierCurveTo(m * 1.38, -.72, m * 1.18, -.78, m * 1.08, -.66);
+    x.stroke();
   }
   x.restore();
 }
@@ -184,9 +236,10 @@ function drawFilter(x, id, P, t, idx = 0) {
         x.fillStyle = g; x.beginPath(); x.arc(c.x, c.y, fw * .17, 0, 7); x.fill();
       }
       break;
-    case "mustache": case "chevron": {
-      const n0 = P(2), l0 = P(0), c = { x: n0.x + (l0.x - n0.x) * .42, y: n0.y + (l0.y - n0.y) * .42 };   // tepat di bawah hidung
-      drawMustache(x, id === "chevron" ? "chevron" : "handlebar", c, fw * (id === "chevron" ? .27 : .3), a);
+    case "snapstache": {
+      drawGlasses(x, eyes, fw * .68, a);
+      const n0 = P(2), l0 = P(0), c = { x: n0.x + (l0.x - n0.x) * .5, y: n0.y + (l0.y - n0.y) * .5 };
+      drawStache(x, c, fw * .38, a);
       break;
     }
     case "love": loveParticles(x, idx, top, at, a, fw, t); break;
