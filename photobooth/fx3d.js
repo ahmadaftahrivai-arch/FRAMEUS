@@ -22,29 +22,33 @@ const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
 /* ---------- Kacamata ---------- */
 // Bentuk lensa dalam satuan "u" (sama dengan versi 2D), sumbu y ke atas. m = +1 kanan, -1 kiri.
-function lensShape(m, o = {}) {
-  const s = o.s || 0, tp = o.t || 0, bt = o.b || 0, fl = o.f || 0;
-  const xi = .08 - s * .6, xo = .72 + s + fl, yt = -.2 - tp, yto = -.23 - tp - fl * 1.2, yb = .4 + bt, Y = (y) => -y;
-  const sh = new THREE.Shape();
-  sh.moveTo(m * (xi + .09), Y(yt));
-  sh.lineTo(m * (xo - .09), Y(yto));
-  sh.quadraticCurveTo(m * xo, Y(yto), m * xo, Y(yto + .1));
-  sh.lineTo(m * (xo - .02 - fl * .5), Y(yb - .26));
-  sh.bezierCurveTo(m * (xo - .02 - fl * .5), Y(yb - .04), m * (xo - .12), Y(yb), m * (xo - .3), Y(yb));
-  sh.lineTo(m * (xi + .26), Y(yb));
-  sh.bezierCurveTo(m * (xi + .08), Y(yb), m * xi, Y(yb - .08), m * xi, Y(yb - .26));
-  sh.lineTo(m * xi, Y(yt + .09));
-  sh.quadraticCurveTo(m * xi, Y(yt), m * (xi + .09), Y(yt));
+// Bentuk persegi membulat hasil ukur dari video lens asli (e = jarak antar sudut mata). m = +1 kanan, -1 kiri.
+function roundRect(m, x0, x1, yTop, yBot, rTI, rTO, rBO, rBI) {
+  const Y = (y) => -y, sh = new THREE.Shape();
+  sh.moveTo(m * (x0 + rTI), Y(yTop));
+  sh.lineTo(m * (x1 - rTO), Y(yTop));
+  sh.quadraticCurveTo(m * x1, Y(yTop), m * x1, Y(yTop + rTO));
+  sh.lineTo(m * x1, Y(yBot - rBO));
+  sh.bezierCurveTo(m * x1, Y(yBot - rBO * .3), m * (x1 - rBO * .3), Y(yBot), m * (x1 - rBO), Y(yBot));
+  sh.lineTo(m * (x0 + rBI), Y(yBot));
+  sh.bezierCurveTo(m * (x0 + rBI * .3), Y(yBot), m * x0, Y(yBot - rBI * .3), m * x0, Y(yBot - rBI));
+  sh.lineTo(m * x0, Y(yTop + rTI));
+  sh.quadraticCurveTo(m * x0, Y(yTop), m * (x0 + rTI), Y(yTop));
   return sh;
 }
+const LENS = { x0: .19, x1: .6, yTop: -.12, yBot: .325 };                         // bukaan kaca
+const lensShape = (m) => roundRect(m, LENS.x0, LENS.x1, LENS.yTop, LENS.yBot, .05, .1, .22, .16);
+const outerShape = (m) => roundRect(m, .14, .66, -.2, .385, .075, .14, .27, .21);   // bingkai: atas tebal, sisi/bawah tipis
 
 const frameMat = new THREE.MeshStandardMaterial({ color: 0x2a201c, roughness: .55, metalness: .05 });
-const lensMask = (m) => {                                            // alphaMap berbentuk lensa
+const LW = LENS.x1 - LENS.x0 + .04, LH = LENS.yBot - LENS.yTop + .04;               // bbox bukaan kaca (+margin)
+const LCX = (LENS.x0 + LENS.x1) / 2, LCY = -(LENS.yTop + LENS.yBot) / 2;
+const lensMask = (m) => {                                                          // alphaMap berbentuk lensa
   const c = document.createElement("canvas"); c.width = 256; c.height = 256;
   const g = c.getContext("2d"); g.fillStyle = "#000"; g.fillRect(0, 0, 256, 256);
   g.fillStyle = "#fff"; g.beginPath();
   lensShape(m).getPoints(24).forEach((p, i) => {
-    const x = (p.x - (m > 0 ? .02 : -.78)) / .76 * 256, y = (.28 - p.y) / .72 * 256;      // bbox lensa -> kanvas
+    const x = (p.x - m * LCX) / LW * 256 + 128, y = (LCY - p.y) / LH * 256 + 128;
     i ? g.lineTo(x, y) : g.moveTo(x, y);
   });
   g.fill();
@@ -78,32 +82,30 @@ const lensMats = [];
 function buildGlasses() {
   const grp = new THREE.Group();
   for (const m of [1, -1]) {
-    const hole = lensShape(m), outer = lensShape(m, { s: .045, t: .085, b: .035, f: .03 });
-    outer.holes.push(hole);
-    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .07, bevelEnabled: true, bevelThickness: .014, bevelSize: .01, bevelSegments: 3, curveSegments: 14 }), frameMat);
-    frame.position.z = -.035;
+    const outer = outerShape(m);
+    outer.holes.push(lensShape(m));
+    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .05, bevelEnabled: true, bevelThickness: .01, bevelSize: .008, bevelSegments: 3, curveSegments: 16 }), frameMat);
+    frame.position.z = -.025;
     grp.add(frame);
-    // lensa melengkung (bidang bersubdivisi + alphaMap bentuk lensa) dengan pantulan lingkungan
-    const bx0 = m > 0 ? .02 : -.78, geo = new THREE.PlaneGeometry(.76, .72, 22, 22);
+    const geo = new THREE.PlaneGeometry(LW, LH, 20, 20);                         // kaca melengkung tipis + alphaMap bentuk lensa
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
-      const nx = pos.getX(i) / .38, ny = pos.getY(i) / .36;
-      pos.setZ(i, .2 * (1 - .6 * (nx * nx + ny * ny)));
+      const nx = pos.getX(i) / (LW / 2), ny = pos.getY(i) / (LH / 2);
+      pos.setZ(i, .06 * (1 - .6 * (nx * nx + ny * ny)));
     }
     geo.computeVertexNormals();
     const lmat = new THREE.MeshBasicMaterial({ map: makeReflection(), transparent: true, opacity: .5, alphaMap: lensMask(m), side: THREE.DoubleSide, depthWrite: false });
     lensMats.push(lmat);
     const lens = new THREE.Mesh(geo, lmat);
-    lens.position.set(bx0 + .38, .28 - .36, 0);
+    lens.position.set(m * LCX, LCY, 0);
     lens.renderOrder = 2;
     grp.add(lens);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(.065, .06, 1.0), frameMat);   // gagang ke arah telinga
-    arm.position.set(m * .82, .23, -.5);
-    arm.rotation.y = m * -.06;
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.04, .05, .9), frameMat);        // gagang pendek dari sudut luar atas ke telinga
+    arm.position.set(m * .67, -(-.17), -.42);
     grp.add(arm);
   }
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.2, .12, .08), frameMat);
-  bridge.position.set(0, .2, 0);
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.2, .075, .05), frameMat);      // jembatan tebal di atas hidung
+  bridge.position.set(0, .115, 0);
   grp.add(bridge);
   return grp;
 }
@@ -152,7 +154,7 @@ function buildStache() {
   geo.computeVertexNormals();
   const mat = new THREE.MeshStandardMaterial({ map: stacheTexture(), transparent: true, alphaTest: .3, roughness: .92, metalness: 0, side: THREE.DoubleSide });
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.scale.y = 1.35;
+  mesh.scale.y = 1.9;
   grp.add(mesh);
   const wireMat = new THREE.MeshStandardMaterial({ color: 0x120a07, roughness: .6 });
   for (const m of [1, -1]) {                                           // kawat tipis melengkung naik ke pipi
@@ -166,14 +168,14 @@ function buildStache() {
 /* ---------- Adegan ---------- */
 const face = new THREE.Group();
 const glasses = buildGlasses();
-glasses.scale.setScalar(.69);
+glasses.scale.setScalar(.645);
 glasses.position.set(0, 0, .09);
 const stache = buildStache();
-stache.scale.setScalar(.38);
+stache.scale.setScalar(.28);
 face.add(glasses, stache);
 const occluder = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), new THREE.MeshBasicMaterial({ colorWrite: false }));
 occluder.scale.set(.46, .72, .6);                                     // kepala: menyembunyikan gagang/ujung kumis di balik wajah saat menoleh
-occluder.position.set(0, -.05, -.46);
+occluder.position.set(0, -.05, -.64);
 occluder.renderOrder = -1;
 face.add(occluder);
 scene.add(face);
@@ -204,6 +206,7 @@ export function drawFace(x, lm, m, idx, poseMatrix) {
   const mc = P(2).add(P(0)).multiplyScalar(.5);
   const st = smooth[idx] || (smooth[idx] = { q: q.clone(), E: E.clone(), fw, mc: mc.clone() });
   st.q.slerp(q, .6); st.E.lerp(E, .7); st.fw += (fw - st.fw) * .7; st.mc.lerp(mc, .7);
+  glasses.scale.setScalar(1 / 1.44); stache.scale.setScalar(.43 / 1.44);          // satuan lens = lebar kepala / 1.44 (diukur dari video asli)
   face.quaternion.copy(st.q);
   face.position.copy(st.E);
   face.scale.setScalar(st.fw);
