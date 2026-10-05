@@ -37,11 +37,11 @@ function roundQuad(m, pts, rad) {
   sh.closePath();
   return sh;
 }
-const LENS_PTS = [[.17, -.12], [.67, -.18], [.6, .325], [.21, .325]];
-const OUT_PTS = [[.12, -.2], [.73, -.27], [.65, .39], [.16, .39]];
-const LENS = { x0: .17, x1: .67, yTop: -.18, yBot: .325 };                         // bbox bukaan kaca
-const lensShape = (m) => roundQuad(m, LENS_PTS, [.07, .06, .26, .2]);
-const outerShape = (m) => roundQuad(m, OUT_PTS, [.1, .08, .31, .26]);              // bingkai: atas tebal, sisi/bawah tipis
+const LENS_PTS = [[.085, -.155], [.735, -.225], [.665, .35], [.135, .35]];            // bukaan kaca (kanan)
+const OUT_PTS = [[.05, -.21], [.77, -.28], [.7, .39], [.1, .39]];                      // tepi luar bingkai
+const LENS = { x0: .085, x1: .735, yTop: -.225, yBot: .35 };                           // bbox bukaan kaca
+const lensShape = (m) => roundQuad(m, LENS_PTS, [.07, .06, .24, .18]);
+const outerShape = (m) => roundQuad(m, OUT_PTS, [.1, .08, .28, .22]);              // bingkai: atas tebal, sisi/bawah tipis
 
 function studioEnv() {                                  // lingkungan lembut untuk kilau bingkai
   const c = document.createElement("canvas"); c.width = 256; c.height = 128;
@@ -72,11 +72,11 @@ function makeReflection() {
   const S = 512, c = document.createElement("canvas"); c.width = S; c.height = S;
   const g = c.getContext("2d");
   const sky = g.createLinearGradient(0, 0, 0, S * .75);
-  sky.addColorStop(0, "#4d51b8"); sky.addColorStop(.6, "#8d89d8"); sky.addColorStop(1, "#b2aad8");
+  sky.addColorStop(0, "#5b5ea8"); sky.addColorStop(.6, "#8c88bf"); sky.addColorStop(1, "#aaa3c4");
   g.fillStyle = sky; g.fillRect(0, 0, S, S);
   const rr = rng(5);
   const fac = g.createLinearGradient(0, S * .3, 0, S);
-  fac.addColorStop(0, "#a58a6c"); fac.addColorStop(.5, "#85705c"); fac.addColorStop(1, "#4f3f35");
+  fac.addColorStop(0, "#8f7a64"); fac.addColorStop(.5, "#6f5f50"); fac.addColorStop(1, "#43382f");
   g.fillStyle = fac;
   g.beginPath(); g.moveTo(0, S * .4);                                        // garis atap bangunan tua yang tidak beraturan
   for (let x = 0; x <= S; x += 32) g.lineTo(x, S * (.42 + .08 * Math.sin(x / 60) + rr() * .06 + (x / S) * .12));
@@ -92,6 +92,7 @@ function makeReflection() {
   const vg = sg.createRadialGradient(S / 2, S / 2, S * .25, S / 2, S / 2, S * .72);   // vinyet: tepi lensa lebih gelap
   vg.addColorStop(0, "rgba(20,18,30,0)"); vg.addColorStop(1, "rgba(20,18,30,.55)");
   sg.fillStyle = vg; sg.fillRect(0, 0, S, S);
+  sg.fillStyle = "rgba(34,30,44,.22)"; sg.fillRect(0, 0, S, S);                    // tint kaca asap
   const img = sg.getImageData(0, 0, S, S), nr = rng(9);                       // grain halus
   for (let i = 0; i < img.data.length; i += 4) { const n = (nr() - .5) * 14; img.data[i] += n; img.data[i + 1] += n; img.data[i + 2] += n; }
   sg.putImageData(img, 0, 0);
@@ -123,12 +124,12 @@ function buildGlasses() {
     lens.position.set(m * LCX, LCY, 0);
     lens.renderOrder = 2;
     grp.add(lens);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(.04, .05, .9), frameMat);        // gagang pendek dari sudut luar atas ke telinga
-    arm.position.set(m * .74, .22, -.42);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.035, .045, .16), frameMat);        // gagang pendek dari sudut luar atas ke telinga
+    arm.position.set(m * .76, .24, -.08);
     grp.add(arm);
   }
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.18, .075, .05), frameMat);      // jembatan tebal di atas hidung
-  bridge.position.set(0, .115, 0);
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.16, .07, .05), frameMat);      // jembatan tebal di atas hidung
+  bridge.position.set(0, .15, 0);
   grp.add(bridge);
   return grp;
 }
@@ -221,9 +222,10 @@ export function drawFace(x, lm, m, idx, poseMatrix) {
     const mat = new THREE.Matrix4().fromArray(poseMatrix.data), q0 = new THREE.Quaternion();
     mat.decompose(new THREE.Vector3(), q0, new THREE.Vector3());
     _e.setFromQuaternion(q0, "YXZ");
-    pitch = clamp(_e.x, -.5, .5); yaw = clamp(_e.y, -.8, .8);
+    pitch = clamp(_e.x * .6, -.3, .3); yaw = clamp(_e.y * .7, -.55, .55);
   }
   for (const lm2 of lensMats) lm2.map.offset.set(-yaw * .35, pitch * .35);   // pantulan bergeser saat kepala menoleh/mendongak
+  if (typeof window !== "undefined" && window.__pose) { pitch = window.__pose.pitch; yaw = window.__pose.yaw; }   // hook uji
   const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ"));
   const w2d = P(454).sub(P(234)).length();
   const fw = w2d / Math.max(Math.cos(yaw), .8);                             // lebar kepala sebenarnya (kompensasi saat menoleh)
