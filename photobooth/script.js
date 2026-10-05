@@ -268,6 +268,12 @@ $("joinForm").addEventListener("submit", async (e) => {
     call.on("stream", onRemote);
   });
 });
+$("btnJoinToggle").onclick = () => {
+  const f = $("joinForm"), open = f.hidden;
+  f.hidden = !open;
+  $("btnJoinToggle").setAttribute("aria-expanded", open);
+  if (open) $("joinCode").focus();
+};
 $("btnSolo").onclick = async () => { if (await ensureCam()) { S.isHost = true; setColors(); go("layout"); } };
 
 /* ---------- Pilih layout & frame ---------- */

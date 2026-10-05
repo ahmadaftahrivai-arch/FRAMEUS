@@ -3,14 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#222222">
+  <meta name="theme-color" content="#f7f8f9">
   <title>frameus — bilik foto untuk dua orang</title>
   <meta name="description" content="Foto berdua walau beda kota. Kamera kalian tampil berdampingan dan hasilnya jadi satu strip foto.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="film" aria-hidden="true"></div>
-
   <header class="bar">
     <button id="btnBack" class="icon-btn" aria-label="Kembali" hidden>
       <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
@@ -27,48 +25,43 @@
   <main>
     <!-- BERANDA -->
     <section data-screen="home" class="screen home">
-      <div class="hero">
-        <div class="hero-copy">
-          <p class="kicker">Bilik foto untuk dua orang</p>
-          <h1>Foto berdua,<br><em>walau beda kota.</em></h1>
-          <p class="lead">Buka bilik bareng pasanganmu. Kamera kalian tampil berdampingan, hasilnya satu strip foto yang bisa kalian simpan.</p>
-        </div>
-        <svg class="hero-art" viewBox="-14 -8 178 446" aria-hidden="true">
-          <g transform="rotate(-5 75 215)">
-            <rect x="8" y="6" width="134" height="418" rx="6" fill="#111" stroke="#f4efe8" stroke-width="2.5"/>
-            <g fill="#f3ece0"><rect x="14" y="20" width="6" height="9" rx="1.5"/><rect x="14" y="62" width="6" height="9" rx="1.5"/><rect x="14" y="104" width="6" height="9" rx="1.5"/><rect x="14" y="146" width="6" height="9" rx="1.5"/><rect x="14" y="188" width="6" height="9" rx="1.5"/><rect x="14" y="230" width="6" height="9" rx="1.5"/><rect x="14" y="272" width="6" height="9" rx="1.5"/><rect x="14" y="314" width="6" height="9" rx="1.5"/><rect x="14" y="356" width="6" height="9" rx="1.5"/><rect x="14" y="398" width="6" height="9" rx="1.5"/>
-              <rect x="130" y="20" width="6" height="9" rx="1.5"/><rect x="130" y="62" width="6" height="9" rx="1.5"/><rect x="130" y="104" width="6" height="9" rx="1.5"/><rect x="130" y="146" width="6" height="9" rx="1.5"/><rect x="130" y="188" width="6" height="9" rx="1.5"/><rect x="130" y="230" width="6" height="9" rx="1.5"/><rect x="130" y="272" width="6" height="9" rx="1.5"/><rect x="130" y="314" width="6" height="9" rx="1.5"/><rect x="130" y="356" width="6" height="9" rx="1.5"/><rect x="130" y="398" width="6" height="9" rx="1.5"/></g>
-            <g>
-              <rect x="26" y="16" width="98" height="92" rx="3" fill="#ffd9e0"/><circle cx="62" cy="64" r="24" fill="#f4b183"/><circle cx="92" cy="60" r="22" fill="#e9967a"/><circle cx="55" cy="60" r="2.5" fill="#1f1814"/><circle cx="69" cy="60" r="2.5" fill="#1f1814"/><circle cx="86" cy="56" r="2.5" fill="#1f1814"/><circle cx="99" cy="56" r="2.5" fill="#1f1814"/><path d="M54 72q8 7 16 0M85 67q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
-              <rect x="26" y="116" width="98" height="92" rx="3" fill="#fbe3a1"/><circle cx="62" cy="164" r="24" fill="#f4b183"/><circle cx="92" cy="160" r="22" fill="#e9967a"/><circle cx="55" cy="160" r="2.5" fill="#1f1814"/><circle cx="69" cy="160" r="2.5" fill="#1f1814"/><circle cx="86" cy="156" r="2.5" fill="#1f1814"/><circle cx="99" cy="156" r="2.5" fill="#1f1814"/><path d="M52 172q10 9 20 0M84 167q8 8 16 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M75 128c-7-9-18 0-9 9l9 9 9-9c9-9-2-18-9-9z" fill="#d8392b"/>
-              <rect x="26" y="216" width="98" height="92" rx="3" fill="#cfe3f4"/><circle cx="62" cy="264" r="24" fill="#f4b183"/><circle cx="92" cy="260" r="22" fill="#e9967a"/><circle cx="55" cy="260" r="2.5" fill="#1f1814"/><circle cx="69" cy="260" r="2.5" fill="#1f1814"/><circle cx="86" cy="256" r="2.5" fill="#1f1814"/><circle cx="99" cy="256" r="2.5" fill="#1f1814"/><ellipse cx="62" cy="274" rx="5" ry="4" fill="#1f1814"/><path d="M85 267q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
-              <rect x="26" y="316" width="98" height="92" rx="3" fill="#d4ecd8"/><circle cx="62" cy="364" r="24" fill="#f4b183"/><circle cx="92" cy="360" r="22" fill="#e9967a"/><circle cx="55" cy="360" r="2.5" fill="#1f1814"/><circle cx="69" cy="360" r="2.5" fill="#1f1814"/><circle cx="86" cy="356" r="2.5" fill="#1f1814"/><circle cx="99" cy="356" r="2.5" fill="#1f1814"/><path d="M54 372q8 7 16 0M85 367q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
-            </g>
-            <text x="75" y="418" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-weight="700" font-size="11" fill="#f3ece0">frameus ♥</text>
-          </g>
-        </svg>
-      </div>
+      <div class="hero-copy">
+        <span class="pill">untuk berdua</span>
+        <h1>Photobooth</h1>
+        <p class="lead">Satu strip foto, kalian berdua di dalamnya, diambil dari dua tempat sekaligus.</p>
 
-      <div class="ticket">
-        <button id="btnCreate" class="btn primary xl">
-          <span class="btn-main">Buat room</span>
-          <span class="btn-sub">undang pasanganmu</span>
-        </button>
-        <div class="or"><span>atau gabung ke room</span></div>
-        <form id="joinForm" class="join" autocomplete="off">
-          <label class="sr" for="joinCode">Kode room</label>
-          <input id="joinCode" name="code" placeholder="KODE" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" inputmode="text">
-          <button id="btnJoin" class="btn" type="submit">Gabung</button>
-        </form>
-        <button id="btnSolo" class="link-btn" type="button">Foto sendiri dulu <span aria-hidden="true">→</span></button>
+        <div class="rows">
+          <button id="btnCreate" class="row-btn dark" type="button"><b>Buat room</b><span>dengan pasanganmu</span></button>
+          <button id="btnJoinToggle" class="row-btn" type="button" aria-expanded="false" aria-controls="joinForm"><b>Gabung ke room</b><span>pakai kode</span></button>
+          <form id="joinForm" class="join" autocomplete="off" hidden>
+            <label class="sr" for="joinCode">Kode room</label>
+            <input id="joinCode" name="code" placeholder="KODE" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false">
+            <button id="btnJoin" class="btn dark" type="submit">Gabung</button>
+          </form>
+        </div>
+        <div class="chips-row"><button id="btnSolo" class="chip-btn" type="button"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>Sendiri saja</button></div>
+
         <p id="homeStatus" class="status" role="status" aria-live="polite"></p>
         <div id="camError" class="alert" role="alert" hidden>
           <strong>Kamera belum bisa dipakai.</strong>
           <p>Izinkan akses kamera di browser, pastikan tidak dipakai aplikasi lain, dan buka lewat alamat <b>https</b>. Lalu coba lagi.</p>
         </div>
+        <p class="foot">Kamera dan foto diproses langsung di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
       </div>
 
-      <p class="foot">Kamera dan foto diproses langsung di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
+      <svg class="hero-art" viewBox="-10 0 190 480" aria-hidden="true">
+        <g transform="rotate(4 85 240)">
+          <rect x="22" y="2" width="106" height="22" rx="8" fill="#23252b"/>
+          <rect x="30" y="20" width="90" height="448" rx="3" fill="#15161a"/>
+          <rect x="36" y="30" width="78" height="96" rx="2" fill="#f6d5dc"/><rect x="36" y="134" width="78" height="96" rx="2" fill="#f4e3b8"/><rect x="36" y="238" width="78" height="96" rx="2" fill="#cfdff0"/><rect x="36" y="342" width="78" height="96" rx="2" fill="#d3e6d7"/>
+          <g fill="#f2b48f"><circle cx="62" cy="82" r="19"/><circle cx="62" cy="186" r="19"/><circle cx="62" cy="290" r="19"/><circle cx="62" cy="394" r="19"/></g>
+          <g fill="#e3957c"><circle cx="88" cy="78" r="18"/><circle cx="88" cy="182" r="18"/><circle cx="88" cy="286" r="18"/><circle cx="88" cy="390" r="18"/></g>
+          <g fill="#15161a"><circle cx="56" cy="79" r="2"/><circle cx="68" cy="79" r="2"/><circle cx="83" cy="75" r="2"/><circle cx="94" cy="75" r="2"/><circle cx="56" cy="183" r="2"/><circle cx="68" cy="183" r="2"/><circle cx="83" cy="179" r="2"/><circle cx="94" cy="179" r="2"/><circle cx="56" cy="287" r="2"/><circle cx="68" cy="287" r="2"/><circle cx="83" cy="283" r="2"/><circle cx="94" cy="283" r="2"/><circle cx="56" cy="391" r="2"/><circle cx="68" cy="391" r="2"/><circle cx="83" cy="387" r="2"/><circle cx="94" cy="387" r="2"/></g>
+          <g stroke="#15161a" stroke-width="1.8" fill="none" stroke-linecap="round"><path d="M55 90q7 6 14 0M81 85q7 6 14 0M55 194q7 6 14 0M81 189q7 6 14 0M55 298q7 6 14 0M81 293q7 6 14 0M55 402q7 6 14 0M81 397q7 6 14 0"/></g>
+          <path d="M75 140c-5-7-14 0-7 7l7 7 7-7c7-7-2-14-7-7z" fill="#e5386d"/>
+          <text x="75" y="462" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="7" fill="#9aa0a8">frameus</text>
+        </g>
+      </svg>
     </section>
 
     <!-- ROOM -->
