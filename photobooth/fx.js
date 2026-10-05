@@ -42,7 +42,7 @@ export const BGS = [
 export const FILTERS = [
   { id: "crown", icon: "👑" }, { id: "tophat", icon: "🎩" }, { id: "sunglasses", icon: "🕶️" },
   { id: "glasses", icon: "👓" }, { id: "bow", icon: "🎀" }, { id: "flowers", icon: "🌸" },
-  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "mustache", icon: "🥸" }, { id: "hearts", icon: "💕" },
+  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "mustache", icon: "🥸" }, { id: "love", icon: "💞" },
 ];
 
 const emoji = (x, ch, cx, cy, size, rot = 0) => {
@@ -50,6 +50,36 @@ const emoji = (x, ch, cx, cy, size, rot = 0) => {
   x.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif`;
   x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(ch, 0, 0); x.restore();
 };
+
+// Hati pipih ala efek "love" di Mac: gradasi pink, berdenyut, mengorbit di sekitar kepala.
+function heart(x, cx, cy, size, rot, alpha) {
+  x.save(); x.translate(cx, cy); x.rotate(rot); x.scale(size, size); x.globalAlpha = alpha;
+  x.beginPath(); x.moveTo(0, .42);
+  x.bezierCurveTo(-1.05, -.15, -.55, -.95, 0, -.4);
+  x.bezierCurveTo(.55, -.95, 1.05, -.15, 0, .42);
+  const g = x.createLinearGradient(-.6, -.8, .6, .6);
+  g.addColorStop(0, "#ff7eb6"); g.addColorStop(1, "#ff3d8b");
+  x.fillStyle = g; x.fill();
+  x.globalAlpha = alpha * .55; x.fillStyle = "#fff";
+  x.beginPath(); x.ellipse(-.38, -.32, .16, .09, -.6, 0, 7); x.fill();
+  x.restore();
+}
+function loveHalo(x, top, at, a, fw, t) {
+  const N = 10;
+  for (let i = 0; i < N; i++) {
+    const u = (i / N + t * .000045 + Math.sin(i * 7.1) * .02) % 1;      // posisi sepanjang busur (0..1)
+    const th = Math.PI * (.06 + .88 * u);
+    const wob = 1 + .12 * Math.sin(t / 520 + i * 2.3);
+    const rx = .82 * fw * wob, ry = (.72 + .14 * Math.sin(i * 3.7)) * fw * wob;
+    const o = at(top, 0, -.2);
+    const px = o.x + Math.cos(a) * Math.cos(th) * rx + Math.sin(a) * Math.sin(th) * ry;
+    const py = o.y + Math.sin(a) * Math.cos(th) * rx - Math.cos(a) * Math.sin(th) * ry;
+    const pulse = .5 + .5 * Math.sin(t / 380 + i * 1.9);
+    const size = fw * (.12 + .09 * pulse) * (i % 3 === 0 ? 1.3 : 1);
+    const alpha = Math.sin(Math.PI * u) ** .6 * (.6 + .4 * pulse);
+    heart(x, px, py, size, a + Math.sin(t / 700 + i) * .35, alpha);
+  }
+}
 
 function drawFilter(x, id, P, t) {
   const A = P(33), B = P(263), top = P(10), L = P(234), R = P(454);
@@ -89,11 +119,7 @@ function drawFilter(x, id, P, t) {
       for (const s of [-1, 1]) { x.beginPath(); x.ellipse(s * fw * .1, 0, fw * .12, fw * .045, s * -.25, 0, 7); x.fill(); }
       x.restore(); break;
     }
-    case "hearts":
-      [[-.5, .3, 0], [.55, .22, 1.7], [0, .5, 3.1]].forEach(([u, v, ph]) => {
-        const c = at(top, u, v + Math.sin(t / 400 + ph) * .04); emoji(x, "❤️", c.x, c.y, fw * .24, a);
-      });
-      break;
+    case "love": loveHalo(x, top, at, a, fw, t); break;
   }
 }
 
