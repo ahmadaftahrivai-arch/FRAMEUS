@@ -66,16 +66,16 @@ function heart(x, cx, cy, w, rot, alpha, color, blur) {
   x.restore();
 }
 const loveState = [];
-const CROWN_SLOTS = 12, CROWN_COLORS = ["#ff47a6", "#f23c9a", "#ff4fae", "#e8369a"];
+const CROWN_SLOTS = 16, CROWN_COLORS = ["#ff47a6", "#f23c9a", "#ff4fae", "#e8369a"];
 const backOut = (t) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2;      // membesar sedikit melewati ukuran akhir
 function crownHeart(i, now) {
   const R = Math.random;
-  const forehead = i >= CROWN_SLOTS;                       // 2 hati kecil di tengah dahi
+  const forehead = i >= CROWN_SLOTS;                       // 1 hati kecil di tengah dahi
   const k = R();
   const th = Math.PI * (.05 + .9 * ((i + .5) / CROWN_SLOTS) + (R() - .5) * .05);
   return {
     i, forehead, th,
-    size: forehead ? .07 + R() * .04 : k < .25 ? .1 + R() * .05 : k < .75 ? .18 + R() * .07 : .26 + R() * .07,
+    size: forehead ? .07 + R() * .03 : k < .2 ? .1 + R() * .05 : k < .65 ? .19 + R() * .07 : .27 + R() * .08,
     u: (R() - .5) * .3, v: -.12 + R() * .1,
     rad: (R() - .5) * .06, color: CROWN_COLORS[(R() * CROWN_COLORS.length) | 0],
     alpha: R() < .25 ? .6 : .92, rot: (R() - .5) * 1.1, ph: R() * 6,
@@ -87,19 +87,19 @@ function loveParticles(x, idx, top, at, a, fw, t) {
   const dt = st.last ? Math.min(.1, (t - st.last) / 1000) : 0;
   st.last = t;
   const R = Math.random;
-  if (!st.crown) st.crown = Array.from({ length: CROWN_SLOTS + 2 }, (_, i) => { const h = crownHeart(i, t); h.birth = t + R() * 900; return h; });
-  st.af += dt * .7;
+  if (!st.crown) st.crown = Array.from({ length: CROWN_SLOTS + 1 }, (_, i) => { const h = crownHeart(i, t); h.birth = t + R() * 900; return h; });
+  st.af += dt * .55;
   while (st.af >= 1) {                                   // hati lepas di samping atas kepala
     st.af -= 1;
     const side = R() < .5 ? -1 : 1;
     st.float.push({
-      u: side * (.8 + R() * .35), v: .1 + R() * .5, size: .22 + R() * .12,
-      vx: side * .03, vy: .06 + R() * .06, rot: (R() - .5) * .6, age: 0, life: 2.6 + R() * 1.2,
+      u: side * (.7 + R() * .25), v: .0 + R() * .4, size: .2 + R() * .1,
+      vx: side * .02, vy: .03 + R() * .04, rot: (R() - .5) * .6, age: 0, life: 2.6 + R() * 1.2,
     });
   }
-  st.float = st.float.filter((p) => (p.age += dt) < p.life);
+  st.float = st.float.filter((p) => (p.age += dt) < p.life).slice(-2);
   // mahkota di garis rambut
-  const rx = .56, ry = .62;
+  const rx = .6, ry = .64;
   for (let n = 0; n < st.crown.length; n++) {
     let h = st.crown[n];
     let age = (t - h.birth) / 1000;
@@ -111,7 +111,7 @@ function loveParticles(x, idx, top, at, a, fw, t) {
     if (h.forehead) c = at(top, h.u, h.v);
     else {
       const dx = Math.cos(h.th), dy = Math.sin(h.th);
-      c = at(top, dx * (rx + h.rad), -.36 + dy * (ry + h.rad));
+      c = at(top, dx * (rx + h.rad), -.3 + dy * (ry + h.rad));
     }
     heart(x, c.x, c.y, h.size * fw * sc, a + h.rot * .6, h.alpha * (1 - out * .5), h.color, 0);
   }
@@ -123,10 +123,13 @@ function loveParticles(x, idx, top, at, a, fw, t) {
 }
 
 function drawFilter(x, id, P, t, idx = 0) {
-  const A = P(33), B = P(263), top = P(10), L = P(234), R = P(454);
-  const a = Math.atan2(B.y - A.y, B.x - A.x), d = { x: Math.cos(a), y: Math.sin(a) }, up = { x: d.y, y: -d.x };
+  const A = P(33), B = P(263), top = P(10), chin = P(152), L = P(234), R = P(454);
   const fw = Math.hypot(R.x - L.x, R.y - L.y);
-  const at = (o, u, v) => ({ x: o.x + d.x * u * fw + up.x * v * fw, y: o.y + d.y * u * fw + up.y * v * fw });
+  const fh = Math.hypot(top.x - chin.x, top.y - chin.y) || fw * 1.35;
+  const up = { x: (top.x - chin.x) / fh, y: (top.y - chin.y) / fh };      // arah atas kepala
+  const d = { x: -up.y, y: up.x };                                       // arah kanan wajah
+  const a = Math.atan2(d.y, d.x), vs = Math.min(fw * 1.2, Math.max(fw * .7, fh / 1.35));
+  const at = (o, u, v) => ({ x: o.x + d.x * u * fw + up.x * v * vs, y: o.y + d.y * u * fw + up.y * v * vs });
   const eyes = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
   switch (id) {
     case "crown": { const c = at(top, 0, .1); emoji(x, "👑", c.x, c.y, fw * .85, a); break; }
