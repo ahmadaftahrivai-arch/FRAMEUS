@@ -242,6 +242,7 @@ function openRoom(attempt = 0) {
   S.peer.on("call", (call) => { call.answer(S.stream); call.on("stream", onRemote); });
   S.peer.on("connection", setupConn);
 }
+document.body.dataset.booth = "classic";
 function applyBooth(id, fromPeer) {
   const B = BOOTHS[id]; if (!B) return;
   S.booth = id; S.cat = B.cat;

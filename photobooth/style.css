@@ -398,3 +398,62 @@ h1, h2, .title, .hero h1, .brand, .code span, .count, .dots div, .pick em, .opt 
 .room-links .link-btn { color: var(--muted); font-size: .92rem; text-decoration: none; }
 .room-links .link-btn:hover { color: var(--ink); text-decoration: underline; }
 .room-links .link-btn:first-child { color: var(--ink); }
+
+
+/* ================= SKIN PER BOOTH (halaman ikut berganti gaya) ================= */
+body[data-booth="birthday"] {
+  --paper: #fdeff3; --paper-2: #f9dfe8; --card: rgba(255,255,255,.74); --muted: #8c6a78; --line: #efcbd8; --pink: #f8cfdc;
+  background-color: #fdeff3;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='700' viewBox='0 0 900 700'><defs><radialGradient id='a' cx='35%' cy='30%'><stop offset='0' stop-color='%23fff' stop-opacity='.7'/><stop offset='1' stop-color='%23fff' stop-opacity='0'/></radialGradient></defs><g opacity='.85'><path d='M0 18 Q225 70 450 18 T900 18' stroke='%23e8b7c6' stroke-width='2' fill='none'/><g fill='%23f6c5d3'><path d='M60 30 l26 8 -12 30z'/><path d='M200 52 l26 -2 -8 30z'/><path d='M340 56 l26 -8 -2 32z'/></g><g fill='%23fbe3a6'><path d='M130 42 l26 4 -10 30z'/><path d='M270 58 l26 -2 -8 30z'/></g><g fill='%23c7e0f4'><path d='M520 56 l26 -6 0 32z'/><path d='M650 50 l26 -4 -6 32z'/></g><g fill='%23f6c5d3'><path d='M780 36 l26 6 -14 30z'/></g></g><g opacity='.7'><ellipse cx='90' cy='300' rx='46' ry='56' fill='%23f7c0d0'/><ellipse cx='90' cy='300' rx='46' ry='56' fill='url(%23a)'/><path d='M90 356 q-6 40 6 80' stroke='%23e7c9d1' fill='none'/><ellipse cx='170' cy='380' rx='38' ry='47' fill='%23fbe3a6'/><ellipse cx='170' cy='380' rx='38' ry='47' fill='url(%23a)'/><path d='M170 427 q6 36 -4 70' stroke='%23e7c9d1' fill='none'/><ellipse cx='780' cy='260' rx='50' ry='60' fill='%23cfe2f5'/><ellipse cx='780' cy='260' rx='50' ry='60' fill='url(%23a)'/><path d='M780 320 q-8 44 6 90' stroke='%23e7c9d1' fill='none'/><ellipse cx='850' cy='400' rx='40' ry='50' fill='%23f7c0d0'/><ellipse cx='850' cy='400' rx='40' ry='50' fill='url(%23a)'/><path d='M850 450 q6 40 -4 80' stroke='%23e7c9d1' fill='none'/><ellipse cx='700' cy='500' rx='34' ry='42' fill='%23d6ebd8'/><ellipse cx='700' cy='500' rx='34' ry='42' fill='url(%23a)'/><ellipse cx='60' cy='560' rx='36' ry='45' fill='%23e4d0f0'/><ellipse cx='60' cy='560' rx='36' ry='45' fill='url(%23a)'/></g><g><circle cx='300' cy='200' r='4' fill='%23f2a6bd'/><circle cx='560' cy='160' r='3.5' fill='%23f6c453'/><circle cx='430' cy='620' r='4' fill='%2395c3ea'/><circle cx='620' cy='620' r='3' fill='%23f2a6bd'/><circle cx='230' cy='560' r='3.5' fill='%23f6c453'/><circle cx='860' cy='140' r='4' fill='%23f2a6bd'/><circle cx='120' cy='150' r='3.5' fill='%2395c3ea'/></g></svg>"), linear-gradient(#fff4f7, #fbe3ec);
+  background-size: 900px 700px, auto; background-repeat: repeat-x, no-repeat; background-position: center top, center; background-attachment: fixed;
+}
+body[data-booth="birthday"] .bar { background: rgba(253,239,243,.7); border-bottom-color: #f0cfda; }
+body[data-booth="birthday"] .stub, body[data-booth="birthday"] .panel, body[data-booth="birthday"] .fxpanel { background: rgba(255,255,255,.78); backdrop-filter: blur(6px); border-color: #f0cfda; }
+body[data-booth="birthday"] .btn.primary, body[data-booth="birthday"] .row-btn.dark, body[data-booth="birthday"] .btn.dark { background: #d9356c; border-color: #d9356c; }
+body[data-booth="birthday"] .code span { background: #d9356c; }
+body[data-booth="birthday"] .title, body[data-booth="birthday"] .hero-copy h1 { color: #4a1830; }
+body[data-booth="birthday"] .stepper li.past { background: #d9356c; border-color: #d9356c; }
+
+body[data-booth="vintage"] {
+  --paper: #2d251c; --paper-2: #3a3024; --card: rgba(255,244,222,.07); --ink: #f3e8d2; --muted: #b9a88b; --line: rgba(243,232,210,.22); --pink: #6b2a35; --red: #d6584f; --red-d: #b8423a;
+  --display: "Fraunces", "Iowan Old Style", Georgia, serif;
+  color-scheme: dark; background-color: #2d251c;
+  background-image: radial-gradient(ellipse at 50% 0%, #6a5a40 0%, rgba(106,90,64,0) 55%), linear-gradient(#4b3e2d, #231c14);
+  background-attachment: fixed;
+}
+body[data-booth="vintage"] .bar { background: rgba(45,37,28,.72); border-bottom-color: var(--line); }
+body[data-booth="vintage"] .brand, body[data-booth="vintage"] .title, body[data-booth="vintage"] h1, body[data-booth="vintage"] .opt b, body[data-booth="vintage"] .count { font-family: var(--display); font-weight: 600; font-variation-settings: "SOFT" 0, "opsz" 72; letter-spacing: -.01em; }
+body[data-booth="vintage"] .stub, body[data-booth="vintage"] .panel, body[data-booth="vintage"] .fxpanel, body[data-booth="vintage"] .try, body[data-booth="vintage"] .ticket { background: rgba(255,244,222,.07); border-color: var(--line); box-shadow: none; color: var(--ink); }
+body[data-booth="vintage"] .btn, body[data-booth="vintage"] .row-btn, body[data-booth="vintage"] .chip-btn, body[data-booth="vintage"] .tab, body[data-booth="vintage"] .count-pill { background: rgba(255,244,222,.08); border-color: var(--line); color: var(--ink); }
+body[data-booth="vintage"] .btn:hover, body[data-booth="vintage"] .row-btn:hover, body[data-booth="vintage"] .chip-btn:hover { background: rgba(255,244,222,.16); }
+body[data-booth="vintage"] .btn.primary, body[data-booth="vintage"] .btn.dark, body[data-booth="vintage"] .row-btn.dark, body[data-booth="vintage"] .tab.sel { background: #f3e8d2; border-color: #f3e8d2; color: #2d251c; }
+body[data-booth="vintage"] .row-btn.dark span { color: #5e5240; }
+body[data-booth="vintage"] .btn:disabled { background: rgba(255,244,222,.05); color: #7c705c; border-color: var(--line); }
+body[data-booth="vintage"] .code span { background: #1f1912; color: #f3e8d2; border: 1px solid rgba(243,232,210,.45); font-family: var(--display); font-weight: 600; }
+body[data-booth="vintage"] .opt, body[data-booth="vintage"] .fcard, body[data-booth="vintage"] .booth { background: rgba(255,244,222,.07); border-color: var(--line); }
+body[data-booth="vintage"] .opt[aria-checked="true"], body[data-booth="vintage"] .fcard[aria-checked="true"], body[data-booth="vintage"] .booth[aria-checked="true"] { border-color: #f3e8d2; box-shadow: 0 0 0 1px #f3e8d2; background: rgba(255,244,222,.14); }
+body[data-booth="vintage"] .ico { background: #f3e8d2; border-color: #f3e8d2; }
+body[data-booth="vintage"] .ico i { background: #2d251c; }
+body[data-booth="vintage"] .opt .check, body[data-booth="vintage"] .fcard .check { background: #f3e8d2; color: #2d251c; border-color: #2d251c; }
+body[data-booth="vintage"] .field input, body[data-booth="vintage"] .join input { background: rgba(0,0,0,.25); border-color: var(--line); color: var(--ink); }
+body[data-booth="vintage"] .join input::placeholder { color: #7c705c; }
+body[data-booth="vintage"] .dots div { background: rgba(255,244,222,.07); border-color: var(--line); color: var(--muted); }
+body[data-booth="vintage"] .dots div.cur { background: #f3e8d2; color: #2d251c; border-color: #f3e8d2; }
+body[data-booth="vintage"] .fxo .face { background: rgba(255,244,222,.08); border-color: var(--line); }
+body[data-booth="vintage"] .fxo[aria-pressed="true"] .face { box-shadow: 0 0 0 2px #2d251c, 0 0 0 4px #f3e8d2; }
+body[data-booth="vintage"] .shutter { background: #f3e8d2; border-color: #f3e8d2; }
+body[data-booth="vintage"] .stepper li { border-color: rgba(243,232,210,.5); }
+body[data-booth="vintage"] .stepper li.past { background: #f3e8d2; border-color: #f3e8d2; }
+body[data-booth="vintage"] .stepper li.on { background: var(--red); border-color: var(--red); }
+body[data-booth="vintage"] .table { background: rgba(0,0,0,.2); border-color: var(--line); }
+body[data-booth="vintage"] .switch i { background: rgba(255,244,222,.25); }
+body[data-booth="vintage"] .switch input:checked + i { background: #f3e8d2; }
+body[data-booth="vintage"] .switch input:checked + i::after { background: #2d251c; }
+body[data-booth="vintage"] .stub .presence[data-state="ok"] { color: #8bd5a4; }
+body[data-booth="vintage"] .stub .presence[data-state="off"], body[data-booth="vintage"] .stub .presence[data-state="err"] { color: #f19489; }
+body[data-booth="vintage"] .link-btn, body[data-booth="vintage"] .room-links .link-btn:first-child { color: var(--ink); }
+body[data-booth="vintage"] .room-links .link-btn { color: var(--muted); }
+body[data-booth="vintage"] .actions { background: linear-gradient(to top, #2d251c 62%, transparent); }
+body[data-booth="vintage"] .pick-note { color: #f19489; }
+body[data-booth="vintage"] .count-pill, body[data-booth="vintage"] .pill { color: var(--ink); }
+body[data-booth="vintage"] .alert { background: rgba(214,88,79,.18); color: var(--ink); border-color: var(--red); }
