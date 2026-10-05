@@ -4,10 +4,10 @@ const CW = 480, CH = 360, PAD = 28, GAP = 18; // ukuran sel foto 4:3
 
 /* ---------- Data: layout, frame, prompt ---------- */
 const LAYOUTS = {
-  "4cut":     { name: "4 cut",    desc: "the classic strip", n: 4, cols: 1, rows: 4 },
-  "2x2":      { name: "2 × 2",    desc: "four, on a card",   n: 4, cols: 2, rows: 2 },
-  "2cut":     { name: "2 cut",    desc: "two big photos",    n: 2, cols: 1, rows: 2 },
-  "polaroid": { name: "Polaroid", desc: "one shot",          n: 1, cols: 1, rows: 1 },
+  "4cut":     { name: "4 foto",   desc: "strip klasik",       n: 4, cols: 1, rows: 4 },
+  "2x2":      { name: "2 × 2",    desc: "kartu empat foto",   n: 4, cols: 2, rows: 2 },
+  "2cut":     { name: "2 foto",   desc: "dua foto besar",     n: 2, cols: 1, rows: 2 },
+  "polaroid": { name: "Polaroid", desc: "satu foto",          n: 1, cols: 1, rows: 1 },
 };
 const EXTRA_SHOTS = 2; // foto lebih banyak dari slot, tinggal dipilih
 
@@ -55,34 +55,33 @@ const film = (x, w, h) => {
 };
 
 const FRAMES = [
-  { id: "blush",  cat: "Simple",   name: "Blush",    bg: solid("#ffd1dc") },
-  { id: "cream",  cat: "Simple",   name: "Cream",    bg: solid("#fff4e0") },
-  { id: "sky",    cat: "Simple",   name: "Sky",      bg: solid("#cfe8ff") },
-  { id: "mint",   cat: "Simple",   name: "Mint",     bg: solid("#d4f5e2") },
-  { id: "white",  cat: "Simple",   name: "White",    bg: solid("#ffffff") },
-  { id: "black",  cat: "Simple",   name: "Black",    bg: solid("#151515"), dark: true },
-  { id: "ging",   cat: "Patterns", name: "Gingham",  bg: gingham("#ffe3ec", "#f4a6bf", 24) },
-  { id: "polka",  cat: "Patterns", name: "Polka",    bg: dots("#fff1c9", "#f0b33c", 34) },
-  { id: "stripe", cat: "Patterns", name: "Stripes",  bg: stripes("#ffffff", "#bfe0ff", 22) },
-  { id: "chk",    cat: "Patterns", name: "Checker",  bg: check("#fdf2e4", "#e8c9a4", 30) },
-  { id: "conf",   cat: "Birthday", name: "Confetti", bg: confetti("#fffaf0", ["#ff6b8b", "#ffd166", "#4cc9f0", "#9b8cff"]) },
-  { id: "ball",   cat: "Birthday", name: "Balloons", bg: balloons("#d9f0ff", ["#ff7aa2", "#ffd166", "#9b8cff", "#6bd6a8"]) },
+  { id: "blush",  cat: "Polos",   name: "Blush",    bg: solid("#ffd1dc") },
+  { id: "cream",  cat: "Polos",   name: "Krem",    bg: solid("#fff4e0") },
+  { id: "sky",    cat: "Polos",   name: "Langit",      bg: solid("#cfe8ff") },
+  { id: "mint",   cat: "Polos",   name: "Mint",     bg: solid("#d4f5e2") },
+  { id: "white",  cat: "Polos",   name: "Putih",    bg: solid("#ffffff") },
+  { id: "black",  cat: "Polos",   name: "Hitam",    bg: solid("#151515"), dark: true },
+  { id: "ging",   cat: "Pola", name: "Gingham",  bg: gingham("#ffe3ec", "#f4a6bf", 24) },
+  { id: "polka",  cat: "Pola", name: "Polkadot",    bg: dots("#fff1c9", "#f0b33c", 34) },
+  { id: "stripe", cat: "Pola", name: "Garis",  bg: stripes("#ffffff", "#bfe0ff", 22) },
+  { id: "chk",    cat: "Pola", name: "Papan",  bg: check("#fdf2e4", "#e8c9a4", 30) },
+  { id: "conf",   cat: "Pesta", name: "Konfeti", bg: confetti("#fffaf0", ["#ff6b8b", "#ffd166", "#4cc9f0", "#9b8cff"]) },
+  { id: "ball",   cat: "Pesta", name: "Balon", bg: balloons("#d9f0ff", ["#ff7aa2", "#ffd166", "#9b8cff", "#6bd6a8"]) },
   { id: "film",   cat: "Vintage",  name: "Film",     bg: film, dark: true },
   { id: "noir",   cat: "Vintage",  name: "Noir",     bg: solid("#3a2c2c"), dark: true },
 ];
-const CATS = ["Simple", "Patterns", "Birthday", "Vintage"];
+const CATS = ["Polos", "Pola", "Pesta", "Vintage"];
 
 const PROMPTS = [
-  "half a heart each. They join in the middle", "peace sign by your cheek", "squish your own cheeks",
-  "make the silliest face you can", "hold hands through the screen", "blow a kiss to each other",
-  "look surprised together", "strike your most serious pose", "pretend you're back to back",
-  "both pose like a magazine cover",
+  "setengah hati masing-masing, nyatu di tengah", "peace di dekat pipi", "cubit pipi sendiri",
+  "pasang muka paling lucu", "gandengan tangan lewat layar", "kirim cium jauh",
+  "kaget bareng", "pose paling serius", "saling membelakangi", "pose cover majalah",
 ];
 
 /* ---------- State ---------- */
 const S = {
   stream: null, remoteStream: null, peer: null, conn: null, isHost: false,
-  layout: "4cut", frame: "blush", cat: "Simple", bg: "none", filter: "none", fxTab: "bg", raw: null,
+  layout: "4cut", frame: "blush", cat: "Polos", code: "", bg: "none", filter: "none", fxTab: "bg", raw: null,
   shots: [], picked: [], busy: false, screen: "home",
 };
 const hasRemote = () => !!S.remoteStream;
@@ -92,28 +91,41 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const send = (m) => { if (S.conn && S.conn.open) S.conn.send(m); };
 
 /* ---------- Navigasi ---------- */
-const ORDER = ["layout", "frame", "shoot", "pick", "style", "done"];
 const STEP_OF = { layout: "frame", frame: "frame", shoot: "shoot", pick: "pick", style: "style", done: "done" };
+const STEP_NAME = ["Bentuk & frame", "Foto", "Pilih", "Sentuhan akhir", "Selesai"];
+const BACK_TO = { room: "home", layout: () => (S.peer ? "room" : "home"), frame: "layout", shoot: () => (S.busy ? null : "frame"), pick: "shoot", style: "pick" };
 
 function go(name) {
   S.screen = name;
-  document.querySelectorAll("[data-screen]").forEach((s) => (s.hidden = s.dataset.screen !== name));
-  $("steps").hidden = !STEP_OF[name];
+  document.querySelectorAll("[data-screen]").forEach((sec) => (sec.hidden = sec.dataset.screen !== name));
   const cur = STEP_OF[name];
   const idx = ["frame", "shoot", "pick", "style", "done"].indexOf(cur);
-  document.querySelectorAll("#steps li").forEach((li, i) => {
-    li.className = i === idx ? "on" : i < idx ? "past" : "";
-  });
-  $("btnBack").hidden = !["layout", "frame", "pick", "style"].includes(name) && !(name === "room");
+  $("stepper").hidden = idx < 0;
+  if (idx >= 0) $("stepLabel").textContent = `Langkah ${idx + 1} dari 5 · ${STEP_NAME[idx]}`;
+  document.querySelectorAll("#steps li").forEach((li, i) => { li.className = i === idx ? "on" : i < idx ? "past" : ""; });
+  $("btnBack").hidden = !(name in BACK_TO);
   if (name === "shoot") attachVideos();
   if (name === "frame") renderFrames();
   if (name === "layout") renderLayouts();
   window.scrollTo(0, 0);
 }
 $("btnBack").onclick = () => {
-  const back = { room: "home", layout: S.peer ? "room" : "home", frame: "layout", pick: "shoot", style: "pick" }[S.screen];
+  let back = BACK_TO[S.screen];
+  if (typeof back === "function") back = back();
   if (back) go(back);
 };
+
+/* ---------- Status kehadiran pasangan ---------- */
+function setPresence(state, text) {
+  const el = $("roomStatus");
+  el.dataset.state = state;
+  el.querySelector("span").textContent = text;
+}
+function updateBadge() {
+  const b = $("camBadge");
+  b.dataset.on = hasRemote() ? "1" : "0";
+  b.querySelector("span").textContent = hasRemote() ? "Berdua" : "Sendiri";
+}
 
 /* ---------- Kamera & koneksi ---------- */
 async function ensureCam() {
@@ -121,9 +133,11 @@ async function ensureCam() {
   try {
     S.raw = await navigator.mediaDevices.getUserMedia({ video: { width: 960, height: 720 }, audio: false });
   } catch (e) {
-    alert("Kamera tidak bisa diakses. Izinkan akses kamera dan buka lewat HTTPS atau localhost.");
+    $("camError").hidden = false;
+    $("camError").scrollIntoView({ block: "nearest", behavior: "smooth" });
     return false;
   }
+  $("camError").hidden = true;
   const src = $("camSrc");
   src.srcObject = S.raw;
   await src.play().catch(() => {});
@@ -146,6 +160,7 @@ function attachVideos() {
   const r = $("remote");
   r.hidden = !hasRemote();
   if (hasRemote()) r.srcObject = S.remoteStream;
+  updateBadge();
   renderFx();
 }
 const newCode = () => {
@@ -155,19 +170,19 @@ const newCode = () => {
 
 function onRemote(stream) {
   S.remoteStream = stream;
-  $("roomStatus").textContent = "Pasangan terhubung ✅";
-  if (S.screen === "shoot") attachVideos();
+  setPresence("ok", "Pasangan sudah terhubung");
+  if (S.screen === "shoot") attachVideos(); else updateBadge();
 }
 function setupConn(c) {
   S.conn = c;
   c.on("open", () => {
-    $("roomStatus").textContent = "Pasangan terhubung ✅";
-    $("homeStatus").textContent = "Terhubung ✅";
+    setPresence("ok", "Pasangan sudah terhubung");
+    $("homeStatus").textContent = "Tersambung!";
     if (!S.isHost && S.screen === "home") go("layout");
     if (S.isHost) send({ t: "cfg", layout: S.layout, frame: S.frame });
   });
   c.on("data", onMsg);
-  c.on("close", () => { S.remoteStream = null; $("roomStatus").textContent = "Pasangan terputus."; if (S.screen === "shoot") attachVideos(); });
+  c.on("close", () => { S.remoteStream = null; setPresence("off", "Pasangan terputus"); if (S.screen === "shoot") attachVideos(); else updateBadge(); });
 }
 function onMsg(m) {
   if (m.t === "cfg") { S.layout = m.layout; S.frame = m.frame; refreshSel(); }
@@ -176,36 +191,65 @@ function onMsg(m) {
   if (m.t === "shoot") { go("shoot"); runShoot(); }
 }
 const pushCfg = () => send({ t: "cfg", layout: S.layout, frame: S.frame });
+const peerError = (e) => ({
+  "peer-unavailable": "Kode room tidak ditemukan. Cek lagi kodenya.",
+  "network": "Tidak bisa tersambung ke server. Cek koneksi internetmu.",
+  "server-error": "Server sedang bermasalah. Coba lagi sebentar lagi.",
+  "browser-incompatible": "Browser ini belum mendukung koneksi langsung.",
+}[e.type] || `Ada kendala koneksi (${e.type}).`);
 
+function showCode(code) {
+  S.code = code;
+  $("roomCode").innerHTML = code.split("").map((c) => `<span>${c}</span>`).join("");
+}
+function openRoom(attempt = 0) {
+  const code = newCode();
+  showCode(code);
+  setPresence("wait", "Menyiapkan room…");
+  S.peer = new Peer(PREFIX + code);
+  S.peer.on("open", () => setPresence("wait", "Menunggu pasangan…"));
+  S.peer.on("error", (e) => {
+    if (e.type === "unavailable-id" && attempt < 3) { S.peer.destroy(); return openRoom(attempt + 1); }   // kode bentrok: buat kode baru
+    setPresence("err", peerError(e));
+  });
+  S.peer.on("call", (call) => { call.answer(S.stream); call.on("stream", onRemote); });
+  S.peer.on("connection", setupConn);
+}
 $("btnCreate").onclick = async () => {
   if (!(await ensureCam())) return;
   S.isHost = true;
-  const code = newCode();
-  $("roomCode").textContent = code;
-  $("roomStatus").textContent = "Membuat room…";
   go("room");
-  S.peer = new Peer(PREFIX + code);
-  S.peer.on("open", () => ($("roomStatus").textContent = "Menunggu pasangan…"));
-  S.peer.on("error", (e) => ($("roomStatus").textContent = "Error: " + e.type));
-  S.peer.on("call", (call) => { call.answer(S.stream); call.on("stream", onRemote); });
-  S.peer.on("connection", setupConn);
+  openRoom();
 };
 $("btnRoomNext").onclick = () => go("layout");
 
-$("btnJoin").onclick = async () => {
+$("btnCopy").onclick = async () => {
+  const b = $("btnCopy"), old = "Salin kode";
+  try { await navigator.clipboard.writeText(S.code); b.textContent = "Tersalin ✓"; } catch (e) { b.textContent = "Salin manual ya"; }
+  setTimeout(() => (b.textContent = old), 1600);
+};
+$("btnShare").onclick = async () => {
+  const text = `Ayo foto bareng di frameus! Buka ${location.href.split("?")[0]} lalu gabung dengan kode ${S.code}`;
+  if (navigator.share) { try { await navigator.share({ title: "frameus", text }); } catch (e) {} }
+  else { try { await navigator.clipboard.writeText(text); $("btnShare").textContent = "Pesan tersalin ✓"; setTimeout(() => ($("btnShare").textContent = "Bagikan"), 1600); } catch (e) {} }
+};
+
+$("joinCode").addEventListener("input", (e) => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""); });
+$("joinForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
   const code = $("joinCode").value.trim().toUpperCase();
-  if (!code) return ($("homeStatus").textContent = "Masukkan kode room dulu.");
+  if (!code) { $("homeStatus").textContent = "Masukkan kode room dari pasanganmu dulu."; $("joinCode").focus(); return; }
   if (!(await ensureCam())) return;
   S.isHost = false;
-  $("homeStatus").textContent = "Menyambung…";
+  $("homeStatus").textContent = "Menyambung ke room…";
   S.peer = new Peer();
-  S.peer.on("error", (e) => ($("homeStatus").textContent = "Gagal join: " + e.type));
+  S.peer.on("error", (er) => ($("homeStatus").textContent = peerError(er)));
   S.peer.on("open", () => {
     setupConn(S.peer.connect(PREFIX + code));
     const call = S.peer.call(PREFIX + code, S.stream);
     call.on("stream", onRemote);
   });
-};
+});
 $("btnSolo").onclick = async () => { if (await ensureCam()) go("layout"); };
 
 /* ---------- Pilih layout & frame ---------- */
@@ -213,9 +257,9 @@ function layoutIcon(L) {
   const el = document.createElement("div");
   el.className = "ico";
   el.style.gridTemplateColumns = `repeat(${L.cols},1fr)`;
-  el.style.width = L.cols > 1 ? "64px" : "40px";
-  for (let i = 0; i < L.n; i++) { const b = document.createElement("i"); b.style.height = L.cols > 1 ? "22px" : L.n > 2 ? "22px" : "44px"; el.append(b); }
-  if (L.n === 1) el.style.paddingBottom = "14px";
+  el.style.width = L.cols > 1 ? "84px" : "56px";
+  for (let i = 0; i < L.n; i++) { const b = document.createElement("i"); b.style.height = L.cols > 1 ? "30px" : L.n > 2 ? "28px" : "58px"; el.append(b); }
+  if (L.n === 1) el.style.paddingBottom = "18px";
   return el;
 }
 function renderLayouts() {
@@ -223,10 +267,10 @@ function renderLayouts() {
   box.innerHTML = "";
   for (const [id, L] of Object.entries(LAYOUTS)) {
     const b = document.createElement("button");
-    b.className = "card" + (id === S.layout ? " sel" : "");
-    b.dataset.id = id;
+    b.type = "button"; b.className = "opt"; b.dataset.id = id;
+    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", id === S.layout);
     b.append(layoutIcon(L));
-    b.insertAdjacentHTML("beforeend", `<b>${L.name}</b><small>${L.desc}</small>`);
+    b.insertAdjacentHTML("beforeend", `<b>${L.name}</b><small>${L.desc}</small><span class="check" aria-hidden="true">✓</span>`);
     b.onclick = () => { S.layout = id; pushCfg(); refreshSel(); };
     box.append(b);
   }
@@ -236,8 +280,8 @@ function renderFrames() {
   cats.innerHTML = "";
   CATS.forEach((c) => {
     const b = document.createElement("button");
-    b.className = "chip" + (c === S.cat ? " sel" : "");
-    b.textContent = c;
+    b.type = "button"; b.className = "tab" + (c === S.cat ? " sel" : ""); b.textContent = c;
+    b.setAttribute("role", "tab"); b.setAttribute("aria-selected", c === S.cat);
     b.onclick = () => { S.cat = c; renderFrames(); };
     cats.append(b);
   });
@@ -245,19 +289,19 @@ function renderFrames() {
   box.innerHTML = "";
   FRAMES.filter((f) => f.cat === S.cat).forEach((f) => {
     const b = document.createElement("button");
-    b.className = "card" + (f.id === S.frame ? " sel" : "");
-    b.dataset.id = f.id;
+    b.type = "button"; b.className = "fcard"; b.dataset.id = f.id;
+    b.setAttribute("role", "radio"); b.setAttribute("aria-checked", f.id === S.frame);
     const cv = document.createElement("canvas");
     render(cv, { frame: f, shots: null, scale: 0.5 });
     b.append(cv);
-    b.insertAdjacentHTML("beforeend", `<b>${f.name}</b>`);
+    b.insertAdjacentHTML("beforeend", `<b>${f.name}</b><span class="check" aria-hidden="true">✓</span>`);
     b.onclick = () => { S.frame = f.id; pushCfg(); refreshSel(); };
     box.append(b);
   });
 }
 function refreshSel() {
-  document.querySelectorAll("#layouts .card").forEach((b) => b.classList.toggle("sel", b.dataset.id === S.layout));
-  document.querySelectorAll("#frames .card").forEach((b) => b.classList.toggle("sel", b.dataset.id === S.frame));
+  document.querySelectorAll("#layouts .opt").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === S.layout));
+  document.querySelectorAll("#frames .fcard").forEach((b) => b.setAttribute("aria-checked", b.dataset.id === S.frame));
   if (S.screen === "frame") renderFrames();
 }
 $("btnLayoutNext").onclick = () => { send({ t: "next" }); go("frame"); };
@@ -283,9 +327,9 @@ function render(canvas, { frame, shots, scale = 1, caption = "", date = false })
   if (shots) {
     x.fillStyle = frame.dark ? "#f5f5f5" : "#3a2a30";
     x.textAlign = "center";
-    x.font = "bold 28px system-ui, sans-serif";
+    x.font = "800 30px Fraunces, Georgia, serif";
     x.fillText(caption, W / 2, H - footer / 2 - (date ? 0 : -10));
-    if (date) { x.font = "16px system-ui, sans-serif"; x.fillText(new Date().toLocaleDateString("id-ID"), W / 2, H - footer / 2 + 26); }
+    if (date) { x.font = "500 16px 'DM Sans', system-ui, sans-serif"; x.fillText(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }), W / 2, H - footer / 2 + 26); }
   }
 }
 
@@ -313,15 +357,21 @@ function grab() {
 async function countdown() {
   const el = $("count");
   el.hidden = false;
-  for (let i = 3; i > 0; i--) { el.textContent = i; await wait(1000); }
+  for (let i = 3; i > 0; i--) {
+    el.textContent = i;
+    el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop");
+    await wait(1000);
+  }
   el.hidden = true;
 }
-function drawThumbs(total) {
+function flash() { const f = $("flash"); f.classList.remove("go"); void f.offsetWidth; f.classList.add("go"); }
+function drawThumbs(total, cur = -1) {
   const box = $("thumbs");
   box.innerHTML = "";
   for (let i = 0; i < total; i++) {
     const d = document.createElement("div");
-    if (S.shots[i]) { const im = new Image(); im.src = S.shots[i].toDataURL("image/jpeg", .7); d.append(im); } else d.textContent = i + 1;
+    if (i === cur) d.className = "cur";
+    if (S.shots[i]) { const im = new Image(); im.alt = `Foto ${i + 1}`; im.src = S.shots[i].toDataURL("image/jpeg", .7); d.append(im); } else d.textContent = i + 1;
     box.append(d);
   }
 }
@@ -329,68 +379,74 @@ async function runShoot() {
   if (S.busy) return;
   S.busy = true;
   S.shots = [];
-  $("btnShoot").hidden = true;
+  $("btnBack").hidden = true;
+  document.querySelector(".shutter-wrap").hidden = true;
   $("fx").hidden = true;
+  $("shootSub").textContent = "Tatap kamera dan ikuti ide di bawah.";
   const total = need() + EXTRA_SHOTS;
   const prompts = [...PROMPTS].sort(() => Math.random() - .5);
   attachVideos();
-  drawThumbs(total);
   for (let i = 0; i < total; i++) {
-    $("shootTitle").textContent = `Shot ${i + 1} of ${total}`;
-    $("shootSub").textContent = "";
-    $("tryText").textContent = "TRY  " + prompts[i % prompts.length];
+    $("shootTitle").textContent = `Foto ${i + 1} dari ${total}`;
+    $("tryBox").hidden = false;
+    $("tryText").textContent = prompts[i % prompts.length];
+    drawThumbs(total, i);
     await countdown();
+    flash();
     S.shots.push(grab());
-    drawThumbs(total);
-    await wait(500);
+    drawThumbs(total, i + 1);
+    await wait(650);
   }
   S.busy = false;
-  $("btnShoot").hidden = false;
+  document.querySelector(".shutter-wrap").hidden = false;
   $("fx").hidden = false;
-  $("shootTitle").textContent = "Get ready";
-  $("shootSub").textContent = "Pastikan wajah kelihatan, lalu mulai.";
-  $("tryText").textContent = "";
+  $("tryBox").hidden = true;
+  $("shootTitle").textContent = "Siap-siap, ya";
+  $("shootSub").textContent = "Pastikan wajah kelihatan, lalu tekan tombol merah.";
+  $("thumbs").innerHTML = "";
   startPick();
 }
 $("btnShoot").onclick = () => { send({ t: "shoot" }); runShoot(); };
 
-/* ---------- Background & face filter ---------- */
+/* ---------- Latar & filter wajah ---------- */
 document.querySelectorAll("[data-fx]").forEach((b) => (b.onclick = () => { S.fxTab = b.dataset.fx; renderFx(); }));
-function fxButton(label, sel, onclick) {
+function fxButton(face, label, pressed, onclick) {
   const b = document.createElement("button");
-  b.className = "fxo" + (sel ? " sel" : "");
-  if (label instanceof Node) b.append(label); else b.textContent = label;
+  b.type = "button"; b.className = "fxo"; b.setAttribute("aria-pressed", pressed); b.setAttribute("aria-label", label);
+  const f = document.createElement("span"); f.className = "face";
+  if (face instanceof Node) f.append(face); else f.textContent = face;
+  b.append(f);
+  b.insertAdjacentHTML("beforeend", `<small>${label}</small>`);
   b.onclick = onclick;
   return b;
 }
 function renderFx() {
   document.querySelectorAll("[data-fx]").forEach((b) => {
-    b.classList.toggle("sel", b.dataset.fx === S.fxTab);
     const on = b.dataset.fx === "bg" ? S.bg !== "none" : S.filter !== "none";
-    b.textContent = (b.dataset.fx === "bg" ? "Background" : "Face filter") + (on ? " •" : "");
+    b.classList.toggle("sel", b.dataset.fx === S.fxTab);
+    b.setAttribute("aria-selected", b.dataset.fx === S.fxTab);
+    b.textContent = (b.dataset.fx === "bg" ? "Latar" : "Filter wajah") + (on ? " •" : "");
   });
   const box = $("fxOpts");
   box.innerHTML = "";
-  if (!window.FX) { $("fxStatus").textContent = "Efek belum termuat (fx.js)."; return; }
+  if (!window.FX) { $("fxStatus").textContent = "Efek belum termuat. Muat ulang halaman jika tetap begini."; return; }
   const key = S.fxTab === "bg" ? "bg" : "filter";
-  box.append(fxButton("✕", S[key] === "none", () => { S[key] = "none"; renderFx(); }));
+  box.append(fxButton("✕", "Tanpa", S[key] === "none", () => { S[key] = "none"; renderFx(); }));
   if (key === "bg") {
     FX.BGS.forEach((b) => {
-      const cv = document.createElement("canvas"); cv.width = 104; cv.height = 104;
-      cv.getContext("2d").drawImage(FX.bgCanvas(b.id), 80, 0, 480, 480, 0, 0, 104, 104);
-      const btn = fxButton(cv, S.bg === b.id, () => pickFx("bg", b.id));
-      btn.title = b.name;
-      box.append(btn);
+      const cv = document.createElement("canvas"); cv.width = 120; cv.height = 120;
+      cv.getContext("2d").drawImage(FX.bgCanvas(b.id), 80, 0, 480, 480, 0, 0, 120, 120);
+      box.append(fxButton(cv, b.name, S.bg === b.id, () => pickFx("bg", b.id)));
     });
   } else {
-    FX.FILTERS.forEach((f) => box.append(fxButton(f.icon, S.filter === f.id, () => pickFx("filter", f.id))));
+    FX.FILTERS.forEach((f) => box.append(fxButton(f.icon, f.name || f.id, S.filter === f.id, () => pickFx("filter", f.id))));
   }
 }
 async function pickFx(key, id) {
   S[key] = id; renderFx();
   const st = $("fxStatus");
   try {
-    await FX.ensure((s) => { if (s === "loading") st.textContent = "Memuat efek… (pertama kali agak lama)"; });
+    await FX.ensure((s) => { if (s === "loading") st.textContent = "Menyiapkan efek… pertama kali agak lama, ya."; });
     st.textContent = "";
   } catch (e) {
     S[key] = "none"; renderFx();
@@ -402,26 +458,29 @@ window.addEventListener("fx-ready", renderFx);
 /* ---------- Pilih foto ---------- */
 function startPick() {
   S.picked = [];
-  $("pickSub").textContent = `Pilih ${need()} foto, urutan sesuai yang kamu klik.`;
+  $("pickSub").textContent = `Pilih ${need()} foto. Urutannya sesuai urutan kamu menekan.`;
   const grid = $("pickGrid");
   grid.innerHTML = "";
+  const count = () => { $("pickCount").textContent = `${S.picked.length} dari ${need()}`; $("btnPickNext").disabled = S.picked.length !== need(); };
   S.shots.forEach((c, i) => {
     const b = document.createElement("button");
-    b.innerHTML = `<img src="${c.toDataURL("image/jpeg", .8)}"><em hidden></em>`;
+    b.type = "button"; b.className = "pick"; b.setAttribute("aria-label", `Foto ${i + 1}`);
+    b.innerHTML = `<img alt="" src="${c.toDataURL("image/jpeg", .8)}"><em></em>`;
     b.onclick = () => {
       const at = S.picked.indexOf(i);
       if (at >= 0) S.picked.splice(at, 1);
       else if (S.picked.length < need()) S.picked.push(i);
-      grid.querySelectorAll("button").forEach((btn, k) => {
+      grid.querySelectorAll(".pick").forEach((btn, k) => {
         const pos = S.picked.indexOf(k);
         btn.classList.toggle("sel", pos >= 0);
-        const em = btn.querySelector("em"); em.hidden = pos < 0; em.textContent = pos + 1;
+        btn.setAttribute("aria-pressed", pos >= 0);
+        btn.querySelector("em").textContent = pos >= 0 ? pos + 1 : "";
       });
-      $("btnPickNext").disabled = S.picked.length !== need();
+      count();
     };
     grid.append(b);
   });
-  $("btnPickNext").disabled = true;
+  count();
   go("pick");
 }
 $("btnPickNext").onclick = () => { go("style"); drawStyle(); };
@@ -435,7 +494,15 @@ $("btnStyleNext").onclick = () => {
   const cv = $("final");
   render(cv, opts());
   $("btnDownload").href = cv.toDataURL("image/png");
+  $("btnDownload").download = `frameus-${new Date().toISOString().slice(0, 10)}.png`;
+  $("btnShareImg").hidden = !(navigator.canShare && navigator.canShare({ files: [new File([""], "x.png", { type: "image/png" })] }));
   go("done");
+};
+$("btnShareImg").onclick = async () => {
+  $("final").toBlob(async (blob) => {
+    const file = new File([blob], "frameus.png", { type: "image/png" });
+    try { await navigator.share({ files: [file], title: "Foto kita di frameus ♥" }); } catch (e) {}
+  }, "image/png");
 };
 $("btnAgain").onclick = () => { S.shots = []; S.picked = []; go("layout"); };
 

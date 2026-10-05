@@ -15,34 +15,34 @@ const scatter = (x, chars, n, size, seed) => {
 };
 
 export const BGS = [
-  { id: "sunset", name: "Sunset", draw: (x) => {
+  { id: "sunset", name: "Senja", draw: (x) => {
       grad(x, [[0, "#2b1055"], [.45, "#d4508b"], [.8, "#ffb347"], [1, "#ffd78a"]]);
       x.fillStyle = "#fff3c4"; x.beginPath(); x.arc(W * .7, H * .68, 60, 0, 7); x.fill();
       x.fillStyle = "#3a1c4a"; x.fillRect(0, H * .82, W, H); } },
-  { id: "beach", name: "Beach", draw: (x) => {
+  { id: "beach", name: "Pantai", draw: (x) => {
       grad(x, [[0, "#8fd3ff"], [.5, "#d8f1ff"], [.5, "#3ab0d6"], [.72, "#7fdbe8"], [.72, "#f6e3b0"], [1, "#efd08a"]]); } },
-  { id: "night", name: "Night sky", draw: (x) => {
+  { id: "night", name: "Malam", draw: (x) => {
       grad(x, [[0, "#050a24"], [1, "#2a2f6b"]]);
       x.fillStyle = "#fff"; let s = 5; const r = () => ((s = (s * 16807) % 2147483647) / 2147483647);
       for (let i = 0; i < 90; i++) { x.globalAlpha = .4 + r() * .6; x.beginPath(); x.arc(r() * W, r() * H, r() * 2 + .5, 0, 7); x.fill(); }
       x.globalAlpha = 1; x.fillStyle = "#fff6c9"; x.beginPath(); x.arc(W * .8, H * .2, 36, 0, 7); x.fill(); } },
-  { id: "meadow", name: "Meadow", draw: (x) => {
+  { id: "meadow", name: "Padang", draw: (x) => {
       grad(x, [[0, "#9fd8ff"], [.55, "#e9f8ff"], [.55, "#8fd27a"], [1, "#4fa84a"]]);
       scatter(x, ["🌼", "🌸", "🌷"], 26, 22, 3); } },
   { id: "gingham", name: "Gingham", draw: (x) => gingham("#ffe3ec", "#f4a6bf", 32)(x, W, H) },
-  { id: "cherry", name: "Cherry", draw: (x) => { gingham("#ffd6e2", "#f4a6bf", 32)(x, W, H); scatter(x, ["🍒", "🌸"], 22, 36, 9); } },
-  { id: "hearts", name: "Hearts", draw: (x) => { grad(x, [[0, "#ffd1e0"], [1, "#ffb3cc"]]); scatter(x, ["💗", "💖", "💕"], 34, 34, 21); } },
-  { id: "confetti", name: "Confetti", draw: (x) => confetti("#fffaf0", ["#ff6b8b", "#ffd166", "#4cc9f0", "#9b8cff"])(x, W, H) },
-  { id: "curtain", name: "Curtain", draw: (x) => {
+  { id: "cherry", name: "Ceri", draw: (x) => { gingham("#ffd6e2", "#f4a6bf", 32)(x, W, H); scatter(x, ["🍒", "🌸"], 22, 36, 9); } },
+  { id: "hearts", name: "Hati", draw: (x) => { grad(x, [[0, "#ffd1e0"], [1, "#ffb3cc"]]); scatter(x, ["💗", "💖", "💕"], 34, 34, 21); } },
+  { id: "confetti", name: "Konfeti", draw: (x) => confetti("#fffaf0", ["#ff6b8b", "#ffd166", "#4cc9f0", "#9b8cff"])(x, W, H) },
+  { id: "curtain", name: "Tirai", draw: (x) => {
       grad(x, [[0, "#5a0710"], [.5, "#9b1020"], [1, "#5a0710"]], false);
       x.fillStyle = "#0004"; for (let i = 0; i < W; i += 40) x.fillRect(i, 0, 14, H); } },
 ];
 
 /* ---------- Face filter ---------- */
 export const FILTERS = [
-  { id: "crown", icon: "👑" }, { id: "tophat", icon: "🎩" }, { id: "sunglasses", icon: "🕶️" },
-  { id: "glasses", icon: "👓" }, { id: "bow", icon: "🎀" }, { id: "flowers", icon: "🌸" },
-  { id: "bunny", icon: "🐰" }, { id: "blush", icon: "☺️" }, { id: "snapstache", icon: "🥸" }, { id: "love", icon: "💞" },
+  { id: "crown", icon: "👑", name: "Mahkota" }, { id: "tophat", icon: "🎩", name: "Topi" }, { id: "sunglasses", icon: "🕶️", name: "Kacamata hitam" },
+  { id: "glasses", icon: "👓", name: "Kacamata" }, { id: "bow", icon: "🎀", name: "Pita" }, { id: "flowers", icon: "🌸", name: "Bunga" },
+  { id: "bunny", icon: "🐰", name: "Kelinci" }, { id: "blush", icon: "☺️", name: "Blush" }, { id: "snapstache", icon: "🥸", name: "Kumis" }, { id: "love", icon: "💞", name: "Love" },
 ];
 
 const emoji = (x, ch, cx, cy, size, rot = 0) => {

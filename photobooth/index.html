@@ -2,110 +2,169 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LDR Photobooth</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3ece0">
+  <title>frameus — bilik foto untuk dua orang</title>
+  <meta name="description" content="Foto berdua walau beda kota. Kamera kalian tampil berdampingan dan hasilnya jadi satu strip foto.">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="top">
-    <button id="btnBack" class="link" hidden>← Kembali</button>
-    <ol id="steps" class="steps" hidden>
-      <li data-s="frame">Frame</li><li data-s="shoot">Shoot</li><li data-s="pick">Pick</li><li data-s="style">Style</li><li data-s="done">Done</li>
-    </ol>
+  <div class="film" aria-hidden="true"></div>
+
+  <header class="bar">
+    <button id="btnBack" class="icon-btn" aria-label="Kembali" hidden>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <a class="brand" href="./" aria-label="frameus, ke beranda">frameus<span class="brand-heart" aria-hidden="true">♥</span></a>
+    <div id="stepper" class="stepper" hidden>
+      <span id="stepLabel" class="step-label"></span>
+      <ol id="steps" aria-hidden="true"><li data-s="frame"></li><li data-s="shoot"></li><li data-s="pick"></li><li data-s="style"></li><li data-s="done"></li></ol>
+    </div>
   </header>
 
+  <video id="camSrc" autoplay playsinline muted></video>
+
   <main>
-    <!-- HOME -->
-    <video id="camSrc" autoplay playsinline muted></video>
-    <section data-screen="home">
-      <span class="pill">for two</span>
-      <h1>Photobooth</h1>
-      <p class="sub">Satu photo strip, berdua di dalamnya, diambil dari dua tempat sekaligus.</p>
-      <div class="stack">
-        <button id="btnCreate" class="btn dark">Start a room <small>dengan pasangan</small></button>
-        <div class="join">
-          <input id="joinCode" placeholder="Kode room" maxlength="6" autocapitalize="characters">
-          <button id="btnJoin" class="btn light">Join a room</button>
+    <!-- BERANDA -->
+    <section data-screen="home" class="screen home">
+      <div class="hero">
+        <div class="hero-copy">
+          <p class="kicker">Bilik foto untuk dua orang</p>
+          <h1>Foto berdua,<br><em>walau beda kota.</em></h1>
+          <p class="lead">Buka bilik bareng pasanganmu. Kamera kalian tampil berdampingan, hasilnya satu strip foto yang bisa kalian simpan.</p>
         </div>
-        <button id="btnSolo" class="btn pill-btn">📷 Just me</button>
+        <svg class="hero-art" viewBox="-14 -8 178 446" aria-hidden="true">
+          <g transform="rotate(-5 75 215)">
+            <rect x="8" y="6" width="134" height="418" rx="6" fill="#1f1814"/>
+            <g fill="#f3ece0"><rect x="14" y="20" width="6" height="9" rx="1.5"/><rect x="14" y="62" width="6" height="9" rx="1.5"/><rect x="14" y="104" width="6" height="9" rx="1.5"/><rect x="14" y="146" width="6" height="9" rx="1.5"/><rect x="14" y="188" width="6" height="9" rx="1.5"/><rect x="14" y="230" width="6" height="9" rx="1.5"/><rect x="14" y="272" width="6" height="9" rx="1.5"/><rect x="14" y="314" width="6" height="9" rx="1.5"/><rect x="14" y="356" width="6" height="9" rx="1.5"/><rect x="14" y="398" width="6" height="9" rx="1.5"/>
+              <rect x="130" y="20" width="6" height="9" rx="1.5"/><rect x="130" y="62" width="6" height="9" rx="1.5"/><rect x="130" y="104" width="6" height="9" rx="1.5"/><rect x="130" y="146" width="6" height="9" rx="1.5"/><rect x="130" y="188" width="6" height="9" rx="1.5"/><rect x="130" y="230" width="6" height="9" rx="1.5"/><rect x="130" y="272" width="6" height="9" rx="1.5"/><rect x="130" y="314" width="6" height="9" rx="1.5"/><rect x="130" y="356" width="6" height="9" rx="1.5"/><rect x="130" y="398" width="6" height="9" rx="1.5"/></g>
+            <g>
+              <rect x="26" y="16" width="98" height="92" rx="3" fill="#ffd9e0"/><circle cx="62" cy="64" r="24" fill="#f4b183"/><circle cx="92" cy="60" r="22" fill="#e9967a"/><circle cx="55" cy="60" r="2.5" fill="#1f1814"/><circle cx="69" cy="60" r="2.5" fill="#1f1814"/><circle cx="86" cy="56" r="2.5" fill="#1f1814"/><circle cx="99" cy="56" r="2.5" fill="#1f1814"/><path d="M54 72q8 7 16 0M85 67q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <rect x="26" y="116" width="98" height="92" rx="3" fill="#fbe3a1"/><circle cx="62" cy="164" r="24" fill="#f4b183"/><circle cx="92" cy="160" r="22" fill="#e9967a"/><circle cx="55" cy="160" r="2.5" fill="#1f1814"/><circle cx="69" cy="160" r="2.5" fill="#1f1814"/><circle cx="86" cy="156" r="2.5" fill="#1f1814"/><circle cx="99" cy="156" r="2.5" fill="#1f1814"/><path d="M52 172q10 9 20 0M84 167q8 8 16 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M75 128c-7-9-18 0-9 9l9 9 9-9c9-9-2-18-9-9z" fill="#d8392b"/>
+              <rect x="26" y="216" width="98" height="92" rx="3" fill="#cfe3f4"/><circle cx="62" cy="264" r="24" fill="#f4b183"/><circle cx="92" cy="260" r="22" fill="#e9967a"/><circle cx="55" cy="260" r="2.5" fill="#1f1814"/><circle cx="69" cy="260" r="2.5" fill="#1f1814"/><circle cx="86" cy="256" r="2.5" fill="#1f1814"/><circle cx="99" cy="256" r="2.5" fill="#1f1814"/><ellipse cx="62" cy="274" rx="5" ry="4" fill="#1f1814"/><path d="M85 267q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
+              <rect x="26" y="316" width="98" height="92" rx="3" fill="#d4ecd8"/><circle cx="62" cy="364" r="24" fill="#f4b183"/><circle cx="92" cy="360" r="22" fill="#e9967a"/><circle cx="55" cy="360" r="2.5" fill="#1f1814"/><circle cx="69" cy="360" r="2.5" fill="#1f1814"/><circle cx="86" cy="356" r="2.5" fill="#1f1814"/><circle cx="99" cy="356" r="2.5" fill="#1f1814"/><path d="M54 372q8 7 16 0M85 367q7 6 14 0" stroke="#1f1814" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </g>
+            <text x="75" y="418" text-anchor="middle" font-family="Fraunces, serif" font-style="italic" font-weight="700" font-size="11" fill="#f3ece0">frameus ♥</text>
+          </g>
+        </svg>
       </div>
-      <p id="homeStatus" class="status"></p>
+
+      <div class="ticket">
+        <button id="btnCreate" class="btn primary xl">
+          <span class="btn-main">Buat room</span>
+          <span class="btn-sub">undang pasanganmu</span>
+        </button>
+        <div class="or"><span>atau gabung ke room</span></div>
+        <form id="joinForm" class="join" autocomplete="off">
+          <label class="sr" for="joinCode">Kode room</label>
+          <input id="joinCode" name="code" placeholder="KODE" maxlength="6" autocapitalize="characters" autocomplete="off" spellcheck="false" inputmode="text">
+          <button id="btnJoin" class="btn" type="submit">Gabung</button>
+        </form>
+        <button id="btnSolo" class="link-btn" type="button">Foto sendiri dulu <span aria-hidden="true">→</span></button>
+        <p id="homeStatus" class="status" role="status" aria-live="polite"></p>
+        <div id="camError" class="alert" role="alert" hidden>
+          <strong>Kamera belum bisa dipakai.</strong>
+          <p>Izinkan akses kamera di browser, pastikan tidak dipakai aplikasi lain, dan buka lewat alamat <b>https</b>. Lalu coba lagi.</p>
+        </div>
+      </div>
+
+      <p class="foot">Kamera dan foto diproses langsung di perangkatmu. Tidak ada foto yang diunggah ke server.</p>
     </section>
 
     <!-- ROOM -->
-    <section data-screen="room" hidden>
-      <h2>Room kamu</h2>
-      <div class="code" id="roomCode">-----</div>
-      <p class="sub">Kirim kode ini ke pasanganmu. Dia buka halaman ini → Join a room.</p>
-      <p id="roomStatus" class="status">Menunggu pasangan…</p>
-      <button id="btnRoomNext" class="btn dark">Lanjut</button>
+    <section data-screen="room" class="screen" hidden>
+      <h2 class="title">Room kamu sudah siap</h2>
+      <p class="sub">Kirim kode ini ke pasanganmu, lalu minta dia pilih <b>Gabung ke room</b>.</p>
+      <div class="stub">
+        <div id="roomCode" class="code" aria-live="polite" aria-label="Kode room"></div>
+        <div class="stub-actions">
+          <button id="btnCopy" class="btn" type="button">Salin kode</button>
+          <button id="btnShare" class="btn" type="button">Bagikan</button>
+        </div>
+      </div>
+      <p id="roomStatus" class="presence" data-state="wait" role="status"><i class="dot"></i><span>Menunggu pasangan…</span></p>
+      <div class="actions"><button id="btnRoomNext" class="btn primary xl" type="button"><span class="btn-main">Lanjut pilih frame</span></button></div>
+      <p class="hint">Pasanganmu bisa gabung kapan saja, bahkan setelah kamu lanjut.</p>
     </section>
 
-    <!-- LAYOUT -->
-    <section data-screen="layout" hidden>
-      <h2>Pick a size</h2>
-      <p class="sub">Tap one. Either of you can choose.</p>
-      <div id="layouts" class="cards"></div>
-      <button id="btnLayoutNext" class="btn dark">Next</button>
+    <!-- BENTUK STRIP -->
+    <section data-screen="layout" class="screen" hidden>
+      <h2 class="title">Pilih bentuk strip</h2>
+      <p class="sub">Siapa pun dari kalian boleh memilih. Pilihannya otomatis tersinkron.</p>
+      <div id="layouts" class="opts" role="radiogroup" aria-label="Bentuk strip"></div>
+      <div class="actions"><button id="btnLayoutNext" class="btn primary xl" type="button"><span class="btn-main">Lanjut</span></button></div>
     </section>
 
     <!-- FRAME -->
-    <section data-screen="frame" hidden>
-      <h2>Pick a frame</h2>
-      <p class="sub">Your photos go in the white boxes.</p>
-      <div id="cats" class="chips"></div>
-      <div id="frames" class="cards frames"></div>
-      <button id="btnFrameNext" class="btn dark">Next</button>
+    <section data-screen="frame" class="screen" hidden>
+      <h2 class="title">Pilih frame</h2>
+      <p class="sub">Foto kalian akan mengisi kotak putih.</p>
+      <div id="cats" class="tabs" role="tablist" aria-label="Kategori frame"></div>
+      <div id="frames" class="frames" role="radiogroup" aria-label="Frame"></div>
+      <div class="actions"><button id="btnFrameNext" class="btn primary xl" type="button"><span class="btn-main">Lanjut ke kamera</span></button></div>
     </section>
 
-    <!-- SHOOT -->
-    <section data-screen="shoot" hidden>
-      <h2 id="shootTitle">Get ready</h2>
-      <p class="sub" id="shootSub">Pastikan wajah kelihatan, lalu mulai.</p>
+    <!-- FOTO -->
+    <section data-screen="shoot" class="screen wide" hidden>
+      <h2 id="shootTitle" class="title">Siap-siap, ya</h2>
+      <p id="shootSub" class="sub">Pastikan wajah kelihatan, lalu tekan tombol merah.</p>
       <div class="cam">
         <canvas id="local" width="640" height="480"></canvas>
         <video id="remote" autoplay playsinline hidden></video>
+        <span id="camBadge" class="cam-badge"><i class="dot"></i><span>Sendiri</span></span>
         <div id="count" class="count" hidden></div>
+        <div id="flash" class="flash" aria-hidden="true"></div>
       </div>
-      <div id="fx">
-        <div class="chips">
-          <button class="chip sel" data-fx="bg">Background</button>
-          <button class="chip" data-fx="filter">Face filter</button>
+      <div id="tryBox" class="try" hidden><span class="try-tag">Coba</span><p id="tryText"></p></div>
+      <div id="thumbs" class="dots" aria-label="Hasil foto"></div>
+
+      <div id="fx" class="fxpanel">
+        <div class="tabs fx-tabs" role="tablist" aria-label="Efek">
+          <button class="tab sel" data-fx="bg" role="tab" type="button">Latar</button>
+          <button class="tab" data-fx="filter" role="tab" type="button">Filter wajah</button>
         </div>
-        <div id="fxOpts" class="fxopts"></div>
-        <p id="fxStatus" class="status"></p>
+        <div id="fxOpts" class="tray"></div>
+        <p id="fxStatus" class="status" role="status" aria-live="polite"></p>
       </div>
-      <p class="try" id="tryText"></p>
-      <div id="thumbs" class="thumbs"></div>
-      <button id="btnShoot" class="btn dark">Mulai foto</button>
+
+      <div class="shutter-wrap">
+        <button id="btnShoot" class="shutter" type="button" aria-label="Mulai foto"><i></i></button>
+        <p class="shutter-label" id="shutterLabel">Mulai foto</p>
+      </div>
     </section>
 
-    <!-- PICK -->
-    <section data-screen="pick" hidden>
-      <h2 id="pickTitle">Pick your shots</h2>
-      <p class="sub" id="pickSub"></p>
+    <!-- PILIH FOTO -->
+    <section data-screen="pick" class="screen" hidden>
+      <h2 id="pickTitle" class="title">Pilih foto terbaik</h2>
+      <p id="pickSub" class="sub"></p>
       <div id="pickGrid" class="pickgrid"></div>
-      <button id="btnPickNext" class="btn dark" disabled>Next</button>
-    </section>
-
-    <!-- STYLE -->
-    <section data-screen="style" hidden>
-      <h2>Style it</h2>
-      <canvas id="preview" class="out"></canvas>
-      <div class="row">
-        <input id="caption" placeholder="Teks bawah" maxlength="30" value="LDR Photobooth">
-        <label class="chk"><input type="checkbox" id="showDate" checked> Tanggal</label>
+      <div class="actions">
+        <span id="pickCount" class="count-pill">0 dari 0</span>
+        <button id="btnPickNext" class="btn primary xl" type="button" disabled><span class="btn-main">Lanjut</span></button>
       </div>
-      <button id="btnStyleNext" class="btn dark">Next</button>
     </section>
 
-    <!-- DONE -->
-    <section data-screen="done" hidden>
-      <h2>Done! 🎉</h2>
-      <canvas id="final" class="out"></canvas>
-      <div class="row">
-        <a id="btnDownload" class="btn dark" download="ldr-photobooth.png">Unduh</a>
-        <button id="btnAgain" class="btn light">Foto lagi</button>
+    <!-- GAYA -->
+    <section data-screen="style" class="screen" hidden>
+      <h2 class="title">Beri sentuhan akhir</h2>
+      <div class="table"><canvas id="preview" class="out"></canvas></div>
+      <div class="panel">
+        <label class="field"><span>Teks di bawah foto</span>
+          <input id="caption" placeholder="Misalnya: Kita ♥" maxlength="30" value="frameus ♥">
+        </label>
+        <label class="switch"><input type="checkbox" id="showDate" checked><i aria-hidden="true"></i><span>Tampilkan tanggal</span></label>
+      </div>
+      <div class="actions"><button id="btnStyleNext" class="btn primary xl" type="button"><span class="btn-main">Selesai</span></button></div>
+    </section>
+
+    <!-- SELESAI -->
+    <section data-screen="done" class="screen" hidden>
+      <h2 class="title">Jadi! <em>Bagus banget.</em></h2>
+      <div class="table"><canvas id="final" class="out tilt"></canvas></div>
+      <div class="actions col">
+        <a id="btnDownload" class="btn primary xl" download="frameus.png"><span class="btn-main">Unduh foto</span></a>
+        <button id="btnShareImg" class="btn xl" type="button" hidden><span class="btn-main">Bagikan</span></button>
+        <button id="btnAgain" class="link-btn" type="button">Foto lagi dari awal</button>
       </div>
     </section>
   </main>
