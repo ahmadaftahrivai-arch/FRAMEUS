@@ -19,40 +19,18 @@ scene.add(sun);
 
 const rng = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
-/* ---------- Peta lingkungan untuk pantulan lensa (langit lavender + deretan bangunan cokelat) ---------- */
-function makeEnv() {
-  const c = document.createElement("canvas"); c.width = 1024; c.height = 512;
-  const g = c.getContext("2d");
-  const sky = g.createLinearGradient(0, 0, 0, 300);
-  sky.addColorStop(0, "#5f63c8"); sky.addColorStop(1, "#b7b3ee");
-  g.fillStyle = sky; g.fillRect(0, 0, 1024, 512);
-  const r = rng(11);
-  for (let x = 0; x < 1024; x += 8) {                               // bangunan
-    const h = 70 + r() * 150, w = 40 + r() * 70, base = 300;
-    g.fillStyle = `rgb(${120 + r() * 40 | 0},${92 + r() * 30 | 0},${72 + r() * 24 | 0})`;
-    g.fillRect(x, base - h, w, h + 212);
-    g.fillStyle = "rgba(235,215,185,.55)";
-    for (let wy = base - h + 10; wy < base - 6; wy += 16) for (let wx = x + 6; wx < x + w - 8; wx += 14) g.fillRect(wx, wy, 6, 9);
-    x += w * .6;
-  }
-  g.fillStyle = "#3a2a22"; g.fillRect(0, 430, 1024, 82);
-  const t = new THREE.CanvasTexture(c);
-  t.mapping = THREE.EquirectangularReflectionMapping;
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-const env = makeEnv();
 
 /* ---------- Kacamata ---------- */
 // Bentuk lensa dalam satuan "u" (sama dengan versi 2D), sumbu y ke atas. m = +1 kanan, -1 kiri.
-function lensShape(m, g = 0) {
-  const xi = .08 - g, xo = .72 + g, yt = -.2 - g * 1.4, yto = -.23 - g * 1.4, yb = .4 + g * 1.2, Y = (y) => -y;
+function lensShape(m, o = {}) {
+  const s = o.s || 0, tp = o.t || 0, bt = o.b || 0, fl = o.f || 0;
+  const xi = .08 - s * .6, xo = .72 + s + fl, yt = -.2 - tp, yto = -.23 - tp - fl * 1.2, yb = .4 + bt, Y = (y) => -y;
   const sh = new THREE.Shape();
   sh.moveTo(m * (xi + .09), Y(yt));
   sh.lineTo(m * (xo - .09), Y(yto));
   sh.quadraticCurveTo(m * xo, Y(yto), m * xo, Y(yto + .1));
-  sh.lineTo(m * (xo - .02), Y(yb - .26));
-  sh.bezierCurveTo(m * (xo - .02), Y(yb - .04), m * (xo - .12), Y(yb), m * (xo - .3), Y(yb));
+  sh.lineTo(m * (xo - .02 - fl * .5), Y(yb - .26));
+  sh.bezierCurveTo(m * (xo - .02 - fl * .5), Y(yb - .04), m * (xo - .12), Y(yb), m * (xo - .3), Y(yb));
   sh.lineTo(m * (xi + .26), Y(yb));
   sh.bezierCurveTo(m * (xi + .08), Y(yb), m * xi, Y(yb - .08), m * xi, Y(yb - .26));
   sh.lineTo(m * xi, Y(yt + .09));
@@ -73,12 +51,36 @@ const lensMask = (m) => {                                            // alphaMap
   return new THREE.CanvasTexture(c);
 };
 
+/* ---------- Tekstur pantulan lensa: langit ungu-kebiruan + bangunan tua cokelat-tan ---------- */
+function makeReflection() {
+  const S = 512, c = document.createElement("canvas"); c.width = S; c.height = S;
+  const g = c.getContext("2d");
+  const sky = g.createLinearGradient(0, 0, 0, S * .7);
+  sky.addColorStop(0, "#5a5cc6"); sky.addColorStop(1, "#9893e4");
+  g.fillStyle = sky; g.fillRect(0, 0, S, S);
+  const fac = g.createLinearGradient(0, S * .3, 0, S);
+  fac.addColorStop(0, "#b09474"); fac.addColorStop(1, "#6e5646");
+  g.fillStyle = fac;
+  g.beginPath(); g.moveTo(0, S * .36); g.lineTo(S * .3, S * .46); g.lineTo(S * .5, S * .4); g.lineTo(S * .72, S * .55); g.lineTo(S * .8, S * .5);
+  g.lineTo(S, S * .66); g.lineTo(S, S); g.lineTo(0, S); g.closePath(); g.fill();
+  g.fillStyle = "rgba(235,215,185,.28)";                                  // jendela lengkung samar
+  for (let y = S * .58; y < S * .95; y += 52) for (let x = 24; x < S - 30; x += 46) { g.beginPath(); g.arc(x + 9, y, 9, Math.PI, 0); g.rect(x, y, 18, 24); g.fill(); }
+  g.fillStyle = "rgba(70,48,36,.35)"; g.fillRect(S * .62, S * .5, S * .06, S * .5);
+  const soft = document.createElement("canvas"); soft.width = S; soft.height = S;
+  const sg = soft.getContext("2d"); sg.filter = "blur(2.5px)"; sg.drawImage(c, 0, 0);
+  const tex = new THREE.CanvasTexture(soft);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+  return tex;
+}
+const lensMats = [];
+
 function buildGlasses() {
   const grp = new THREE.Group();
   for (const m of [1, -1]) {
-    const hole = lensShape(m), outer = lensShape(m, .045);
+    const hole = lensShape(m), outer = lensShape(m, { s: .045, t: .085, b: .035, f: .03 });
     outer.holes.push(hole);
-    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .07, bevelEnabled: true, bevelThickness: .016, bevelSize: .014, bevelSegments: 3, curveSegments: 14 }), frameMat);
+    const frame = new THREE.Mesh(new THREE.ExtrudeGeometry(outer, { depth: .07, bevelEnabled: true, bevelThickness: .014, bevelSize: .01, bevelSegments: 3, curveSegments: 14 }), frameMat);
     frame.position.z = -.035;
     grp.add(frame);
     // lensa melengkung (bidang bersubdivisi + alphaMap bentuk lensa) dengan pantulan lingkungan
@@ -89,20 +91,19 @@ function buildGlasses() {
       pos.setZ(i, .2 * (1 - .6 * (nx * nx + ny * ny)));
     }
     geo.computeVertexNormals();
-    const lens = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-      color: 0xa6a3f2, metalness: 1, roughness: .06, envMap: env, envMapIntensity: 1.6,
-      transparent: true, opacity: .55, alphaMap: lensMask(m), side: THREE.DoubleSide, depthWrite: false,
-    }));
+    const lmat = new THREE.MeshBasicMaterial({ map: makeReflection(), transparent: true, opacity: .5, alphaMap: lensMask(m), side: THREE.DoubleSide, depthWrite: false });
+    lensMats.push(lmat);
+    const lens = new THREE.Mesh(geo, lmat);
     lens.position.set(bx0 + .38, .28 - .36, 0);
     lens.renderOrder = 2;
     grp.add(lens);
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(.07, .075, 1.0), frameMat);   // gagang ke arah telinga
-    arm.position.set(m * .8, .2, -.5);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.065, .06, 1.0), frameMat);   // gagang ke arah telinga
+    arm.position.set(m * .82, .23, -.5);
     arm.rotation.y = m * -.06;
     grp.add(arm);
   }
-  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.24, .1, .08), frameMat);
-  bridge.position.set(0, .195, 0);
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(.2, .12, .08), frameMat);
+  bridge.position.set(0, .2, 0);
   grp.add(bridge);
   return grp;
 }
@@ -122,7 +123,7 @@ function stacheTexture() {
     g.closePath();
   };
   const grad = g.createLinearGradient(0, -.2, 0, .24);
-  grad.addColorStop(0, "#5f4230"); grad.addColorStop(.55, "#42301f"); grad.addColorStop(1, "#271811");
+  grad.addColorStop(0, "#4d392e"); grad.addColorStop(.55, "#35271d"); grad.addColorStop(1, "#1f1510");
   g.fillStyle = grad; body(); g.fill();
   g.save(); body(); g.clip(); g.lineCap = "round";
   const r = rng(77);
@@ -195,6 +196,7 @@ export function drawFace(x, lm, m, idx, poseMatrix) {
     _e.setFromQuaternion(q0, "YXZ");
     pitch = clamp(_e.x, -.5, .5); yaw = clamp(_e.y, -.8, .8);
   }
+  for (const lm2 of lensMats) lm2.map.offset.set(-yaw * .35, pitch * .35);   // pantulan bergeser saat kepala menoleh/mendongak
   const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, "YXZ"));
   const w2d = P(454).sub(P(234)).length();
   const fw = w2d / Math.max(Math.cos(yaw), .8);                             // lebar kepala sebenarnya (kompensasi saat menoleh)
